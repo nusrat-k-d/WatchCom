@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from "react-router-dom"
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom"
 import { Clapperboard, User, Menu, X, LogOut, Film, Dna, Brain, Sparkles } from "lucide-react"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -8,12 +8,25 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const currentPath = location.pathname
 
   const handleLogout = () => {
     logout()
     setIsMenuOpen(false)
     navigate("/")
   }
+
+  const isAiActive = currentPath === "/" || currentPath === "/discover" || currentPath === "/ai-results"
+  const isTasteDnaActive = currentPath === "/taste-dna"
+  const isForYouActive = currentPath === "/recommendations"
+
+  const getDesktopClass = (isActive: boolean) => 
+    `flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full transition-all duration-300 ${
+      isActive 
+        ? "bg-[var(--color-gold)] text-black font-semibold shadow-lg shadow-[var(--color-gold)]/10" 
+        : "text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5"
+    }`
 
   return (
     <>
@@ -38,14 +51,14 @@ export function Navbar() {
           </div>
           
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/discover" className="flex items-center gap-2 text-sm font-medium bg-[var(--color-gold)] hover:bg-[#b5952f] text-black px-4 py-2 rounded-full transition-colors">
-              <Sparkles className="h-4 w-4 fill-black" /> AI Assistant
+            <Link to="/discover" className={getDesktopClass(isAiActive)}>
+              <Sparkles className={`h-4 w-4 ${isAiActive ? "fill-black text-black" : "text-[var(--color-text-secondary)]"}`} /> AI Assistant
             </Link>
-            <Link to="/taste-dna" className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors">
-              <Dna className="h-4 w-4" /> Taste DNA
+            <Link to="/taste-dna" className={getDesktopClass(isTasteDnaActive)}>
+              <Dna className={`h-4 w-4 ${isTasteDnaActive ? "text-black" : "text-[var(--color-text-secondary)]"}`} /> Taste DNA
             </Link>
-            <Link to="/recommendations" className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-white transition-colors">
-              <Film className="h-4 w-4" /> For You
+            <Link to="/recommendations" className={getDesktopClass(isForYouActive)}>
+              <Film className={`h-4 w-4 ${isForYouActive ? "text-black" : "text-[var(--color-text-secondary)]"}`} /> For You
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -61,7 +74,7 @@ export function Navbar() {
           </div>
         </div>
       </nav>
-
+ 
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
@@ -72,9 +85,15 @@ export function Navbar() {
             className="md:hidden fixed top-16 left-0 right-0 z-40 bg-[var(--color-surface)] border-b border-white/10 shadow-2xl overflow-hidden"
           >
             <div className="flex flex-col py-4 px-4 space-y-4">
-              <Link to="/discover" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-white flex items-center gap-3"><Sparkles className="h-5 w-5" /> AI Assistant</Link>
-              <Link to="/taste-dna" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-[var(--color-gold)] flex items-center gap-3"><Dna className="h-5 w-5" /> Taste DNA</Link>
-              <Link to="/recommendations" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-white flex items-center gap-3"><Film className="h-5 w-5" /> For You</Link>
+              <Link to="/discover" onClick={() => setIsMenuOpen(false)} className={`text-lg font-medium flex items-center gap-3 transition-colors ${isAiActive ? "text-[var(--color-gold)] font-bold" : "text-white"}`}>
+                <Sparkles className={`h-5 w-5 ${isAiActive ? "text-[var(--color-gold)]" : "text-white"}`} /> AI Assistant
+              </Link>
+              <Link to="/taste-dna" onClick={() => setIsMenuOpen(false)} className={`text-lg font-medium flex items-center gap-3 transition-colors ${isTasteDnaActive ? "text-[var(--color-gold)] font-bold" : "text-white"}`}>
+                <Dna className={`h-5 w-5 ${isTasteDnaActive ? "text-[var(--color-gold)]" : "text-white"}`} /> Taste DNA
+              </Link>
+              <Link to="/recommendations" onClick={() => setIsMenuOpen(false)} className={`text-lg font-medium flex items-center gap-3 transition-colors ${isForYouActive ? "text-[var(--color-gold)] font-bold" : "text-white"}`}>
+                <Film className={`h-5 w-5 ${isForYouActive ? "text-[var(--color-gold)]" : "text-white"}`} /> For You
+              </Link>
               <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-white flex items-center gap-3"><User className="h-5 w-5" /> Profile</Link>
               <div className="border-t border-white/10 pt-4 mt-2">
                 {isAuthenticated ? (
