@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Sparkles, ArrowLeft, Clock, Brain, RefreshCw } from "lucide-react"
+import { Search, Sparkles, ArrowLeft, Clock, Brain, RefreshCw, CheckCircle2, AlertCircle, Filter, Eye } from "lucide-react"
 import { MOCK_MOVIES } from "../lib/mock-data"
 import type { Movie } from "../lib/mock-data"
 import { Button } from "../components/ui/button"
+
+interface ExtractedIntent {
+  mood: string
+  avoid: string
+  runtime: string
+  genre: string
+  complexity: string
+  confidence: number
+}
 
 export function AiResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -12,17 +21,80 @@ export function AiResultsPage() {
   const [searchInput, setSearchInput] = useState(query)
   const [isLoading, setIsLoading] = useState(true)
   const [loadingStep, setLoadingStep] = useState(0)
+  const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [results, setResults] = useState<Movie[]>([])
+  const [intent, setIntent] = useState<ExtractedIntent | null>(null)
 
-  const loadingTexts = [
-    "Analyzing semantic intent...",
-    "Querying taste profile & vectors...",
-    "Scanning cinematic database...",
-    "Evaluating thematic coherence...",
-    "Generating AI recommendations..."
+  const loadingStages = [
+    "Understanding your request...",
+    "Detecting intent...",
+    "Searching movie knowledge...",
+    "Ranking best matches...",
+    "Preparing explanations..."
   ]
 
-  // Mock AI matching engine
+  // Dynamic intent parser based on query input
+  const parseIntent = (inputQuery: string): ExtractedIntent => {
+    const q = inputQuery.toLowerCase()
+    
+    // Default intent
+    let mood = "Cerebral / Absorbing"
+    let avoid = "None specified"
+    let runtime = "Any"
+    let genre = "Drama / Science Fiction"
+    let complexity = "Medium"
+    let confidence = 88
+
+    // Rule-based heuristic extraction
+    if (q.includes("mind blowing") || q.includes("mind-blowing") || q.includes("mind bending") || q.includes("mind-bending")) {
+      mood = "Mind Blowing"
+      complexity = "Extremely High"
+      genre = "Sci-Fi / Mystery"
+      confidence = 96
+    } else if (q.includes("feel good") || q.includes("feel-good") || q.includes("happy") || q.includes("comfort")) {
+      mood = "Uplifting / Warm"
+      complexity = "Light / Accessible"
+      genre = "Comedy / Drama / Music"
+      confidence = 94
+    } else if (q.includes("cry") || q.includes("sad") || q.includes("emotional")) {
+      mood = "Melancholic / Cathartic"
+      complexity = "High"
+      genre = "Drama / Romance"
+      confidence = 92
+    } else if (q.includes("thriller") || q.includes("psychological") || q.includes("twist")) {
+      mood = "Suspenseful / Tense"
+      complexity = "High"
+      genre = "Thriller / Mystery / Crime"
+      confidence = 95
+    }
+
+    if (q.includes("depressing") || q.includes("sad")) {
+      avoid = "Depressing / Heavy themes"
+    } else if (q.includes("horror") || q.includes("scary")) {
+      avoid = "Jump scares / Horror"
+    } else if (q.includes("action") && q.includes("no")) {
+      avoid = "Heavy action / Explosions"
+    }
+
+    if (q.includes("short") || q.includes("quick") || q.includes("under 2 hours")) {
+      runtime = "Under 120 minutes"
+    } else if (q.includes("long") || q.includes("epic")) {
+      runtime = "Over 150 minutes"
+    }
+
+    if (q.includes("sci-fi") || q.includes("scifi") || q.includes("space") || q.includes("interstellar")) {
+      genre = "Science Fiction"
+    } else if (q.includes("music") || q.includes("whiplash") || q.includes("jazz")) {
+      genre = "Drama / Music"
+    } else if (q.includes("nolan") || q.includes("director")) {
+      genre = "Auteur Cinema"
+      complexity = "High"
+    }
+
+    return { mood, avoid, runtime, genre, complexity, confidence }
+  }
+
+  // AI Pipeline Request Lifecycle Simulation
   useEffect(() => {
     if (!query) {
       setResults([])
@@ -32,23 +104,32 @@ export function AiResultsPage() {
 
     setIsLoading(true)
     setLoadingStep(0)
+    setCompletedSteps([])
 
-    // Cycle through loading steps to look premium
-    const stepInterval = setInterval(() => {
-      setLoadingStep((prev) => {
-        if (prev < loadingTexts.length - 1) {
-          return prev + 1
+    // Parse the query intent immediately
+    const extractedIntent = parseIntent(query)
+    setIntent(extractedIntent)
+
+    // Simulate animated loading stages sequence
+    // Total 5 stages. We change stage every 600ms, marking the previous step completed.
+    const interval = setInterval(() => {
+      setLoadingStep((current) => {
+        if (current < loadingStages.length - 1) {
+          setCompletedSteps((prev) => [...prev, current])
+          return current + 1
+        } else {
+          setCompletedSteps((prev) => [...prev, current])
+          clearInterval(interval)
+          return current
         }
-        clearInterval(stepInterval)
-        return prev
       })
-    }, 400)
+    }, 650)
 
     const timer = setTimeout(() => {
       const lowerQuery = query.toLowerCase()
       let matchedMovies: Movie[] = []
 
-      // Simple rule-based mock semantic matcher
+      // Heuristic Mock Matcher
       if (
         lowerQuery.includes("sci-fi") ||
         lowerQuery.includes("scifi") ||
@@ -60,7 +141,6 @@ export function AiResultsPage() {
         lowerQuery.includes("bending") ||
         lowerQuery.includes("blowing")
       ) {
-        // Return sci-fi focus
         matchedMovies = MOCK_MOVIES.filter(m => 
           m.genres.includes("Sci-Fi") || 
           m.title === "Interstellar" || 
@@ -77,7 +157,6 @@ export function AiResultsPage() {
         lowerQuery.includes("twist") ||
         lowerQuery.includes("dark")
       ) {
-        // Return thriller/mystery focus
         matchedMovies = MOCK_MOVIES.filter(m => 
           m.genres.includes("Thriller") || 
           m.genres.includes("Mystery") ||
@@ -92,7 +171,6 @@ export function AiResultsPage() {
         lowerQuery.includes("comedy") ||
         lowerQuery.includes("uplifting")
       ) {
-        // Return lighter/musical/high match
         matchedMovies = MOCK_MOVIES.filter(m => 
           m.genres.includes("Music") || 
           m.genres.includes("Comedy") ||
@@ -106,7 +184,6 @@ export function AiResultsPage() {
         lowerQuery.includes("drama") ||
         lowerQuery.includes("heart")
       ) {
-        // Return drama/emotional
         matchedMovies = MOCK_MOVIES.filter(m => 
           m.genres.includes("Drama") || 
           m.title === "Interstellar" || 
@@ -115,21 +192,19 @@ export function AiResultsPage() {
       } else if (lowerQuery.includes("underrated") || lowerQuery.includes("gem") || lowerQuery.includes("hidden")) {
         matchedMovies = MOCK_MOVIES.filter(m => m.discoveryScore && m.discoveryScore > 90)
       } else {
-        // Default curated list
         matchedMovies = [MOCK_MOVIES[0], MOCK_MOVIES[1], MOCK_MOVIES[7], MOCK_MOVIES[8]]
       }
 
-      // Fallback if none found
       if (matchedMovies.length === 0) {
         matchedMovies = MOCK_MOVIES.slice(0, 4)
       }
 
       setResults(matchedMovies)
       setIsLoading(false)
-    }, 2000)
+    }, 3800) // End after ~3.8 seconds to display progress correctly
 
     return () => {
-      clearInterval(stepInterval)
+      clearInterval(interval)
       clearTimeout(timer)
     }
   }, [query])
@@ -187,7 +262,7 @@ export function AiResultsPage() {
         </Link>
 
         {/* Search header area */}
-        <div className="max-w-3xl mx-auto mb-16 text-center">
+        <div className="max-w-3xl mx-auto mb-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -209,15 +284,12 @@ export function AiResultsPage() {
               />
               <button 
                 type="submit" 
-                className="absolute right-3 bg-[var(--color-gold)] hover:bg-[#b5952f] text-black px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg hover:shadow-[var(--color-gold)]/20"
+                className="absolute right-3 bg-[var(--color-gold)] hover:bg-[#b5952f] text-black px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg hover:shadow-[var(--color-gold)]/20 cursor-pointer"
               >
                 Refine
               </button>
             </div>
           </form>
-          <p className="text-xs text-[var(--color-text-secondary)] font-light italic">
-            Currently analyzing: <span className="text-gray-300 font-normal">"{query}"</span>
-          </p>
         </div>
 
         {/* Results / Loading Container */}
@@ -225,31 +297,67 @@ export function AiResultsPage() {
           {isLoading ? (
             <motion.div 
               key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-20"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="flex flex-col items-center justify-center py-12 max-w-lg mx-auto bg-[#0b0b0c] border border-white/5 p-8 md:p-12 rounded-2xl shadow-2xl relative"
             >
-              <div className="relative w-20 h-20 mb-8">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.02),transparent_70%)] pointer-events-none rounded-2xl" />
+
+              {/* Glowing Pulse Ring */}
+              <div className="relative w-16 h-16 mb-10 flex items-center justify-center">
+                <div className="absolute inset-0 border border-[var(--color-gold)]/20 rounded-full animate-ping" style={{ animationDuration: '2.5s' }} />
                 <div className="absolute inset-0 border-2 border-[var(--color-gold)]/10 rounded-full" />
                 <motion.div 
                   className="absolute inset-0 border-2 border-t-[var(--color-gold)] border-r-[var(--color-gold)] rounded-full"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
-                <Brain className="absolute inset-0 m-auto h-8 w-8 text-[var(--color-gold)] animate-pulse" />
+                <Brain className="h-6 w-6 text-[var(--color-gold)] animate-pulse" />
               </div>
-              <motion.p 
-                key={loadingStep}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-lg font-medium text-[var(--color-gold)] tracking-wide font-serif h-8 text-center"
-              >
-                {loadingTexts[loadingStep]}
-              </motion.p>
-              <p className="text-xs text-[var(--color-text-secondary)] mt-2 font-light text-center">
-                Consulting WatchCom taste matrix models...
+
+              {/* Sequential Progress Stages */}
+              <div className="w-full space-y-4">
+                {loadingStages.map((stage, idx) => {
+                  const isCompleted = completedSteps.includes(idx)
+                  const isActive = loadingStep === idx
+
+                  return (
+                    <motion.div 
+                      key={stage}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={`flex items-center gap-4 py-2 px-3 rounded-lg border transition-all duration-300 ${
+                        isActive 
+                          ? "bg-[rgba(212,175,55,0.05)] border-[var(--color-gold)]/30 text-white" 
+                          : isCompleted 
+                            ? "bg-transparent border-transparent text-gray-400" 
+                            : "bg-transparent border-transparent text-gray-700"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-4.5 w-4.5 text-[var(--color-gold)] shrink-0" />
+                      ) : isActive ? (
+                        <motion.div 
+                          className="h-2 w-2 rounded-full bg-[var(--color-gold)] shrink-0" 
+                          animate={{ scale: [1, 1.4, 1] }} 
+                          transition={{ duration: 1, repeat: Infinity }}
+                        />
+                      ) : (
+                        <div className="h-2 w-2 rounded-full bg-gray-800 shrink-0" />
+                      )}
+                      
+                      <span className={`text-sm font-medium tracking-wide ${isActive ? "font-semibold" : "font-light"}`}>
+                        {stage}
+                      </span>
+                    </motion.div>
+                  )
+                })}
+              </div>
+
+              <p className="text-[10px] text-[var(--color-text-secondary)] uppercase tracking-widest mt-10 font-bold">
+                WatchCom AI Engine v1.0
               </p>
             </motion.div>
           ) : results.length > 0 ? (
@@ -258,130 +366,192 @@ export function AiResultsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="max-w-4xl mx-auto space-y-10"
+              className="max-w-4xl mx-auto space-y-8"
             >
-              <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
-                <h3 className="text-xl font-serif font-bold tracking-wide flex items-center gap-2 text-white">
-                  <Sparkles className="h-5 w-5 text-[var(--color-gold)]" />
-                  We found {results.length} perfect matches
-                </h3>
-                <span className="text-xs text-[var(--color-text-secondary)]">Sorted by Semantic Alignment</span>
+              
+              {/* Original Search Query Display */}
+              <div className="text-center py-4 border-b border-white/5 mb-2">
+                <p className="text-xs text-[var(--color-text-secondary)] uppercase tracking-widest font-bold mb-1">Original Request</p>
+                <p className="text-lg sm:text-xl font-serif text-white max-w-2xl mx-auto font-medium italic">
+                  "{query}"
+                </p>
               </div>
 
-              {results.map((movie, idx) => (
-                <motion.div 
-                  key={movie.id}
-                  initial={{ opacity: 0, y: 30 }}
+              {/* AI Understood Intent Panel */}
+              {intent && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1, duration: 0.6 }}
-                  className="group relative bg-[#0d0d0d]/80 border border-white/5 rounded-2xl p-6 hover:border-[var(--color-gold)]/30 hover:shadow-[0_0_30px_rgba(212,175,55,0.04)] transition-all duration-500 overflow-hidden"
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="bg-[#0b0b0c] border border-[var(--color-gold)]/15 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden"
                 >
-                  {/* Subtle luxury glow inside card */}
-                  <div className="absolute -right-20 -bottom-20 w-60 h-60 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.02),transparent_70%)] pointer-events-none" />
+                  {/* Backdrop golden accent decoration */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.04),transparent_70%)] pointer-events-none" />
+                  
+                  <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-white/5">
+                    <div className="p-2 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 rounded-lg">
+                      <Brain className="h-5 w-5 text-[var(--color-gold)]" />
+                    </div>
+                    <div>
+                      <h4 className="font-serif font-bold text-white text-lg sm:text-xl">WatchCom AI Intent Extraction</h4>
+                      <p className="text-xs text-[var(--color-text-secondary)] font-light">Extracted thematic attributes mapped from your request.</p>
+                    </div>
+                    <div className="ml-auto bg-green-500/10 border border-green-500/20 text-green-400 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                      {intent.confidence}% Confidence
+                    </div>
+                  </div>
 
-                  <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-                    {/* Poster */}
-                    <Link to={`/movie/${movie.id}`} className="w-full md:w-48 shrink-0 rounded-xl overflow-hidden shadow-2xl border border-white/5 block aspect-[2/3]">
-                      <img 
-                        src={movie.posterUrl} 
-                        alt={movie.title} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                      />
-                    </Link>
-
-                    {/* Movie info */}
-                    <div className="flex-1 py-1 w-full">
-                      <div className="flex flex-wrap items-center gap-3 mb-3">
-                        <span className="bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 text-[var(--color-gold)] px-3 py-1 rounded-full font-bold text-xs">
-                          {movie.matchScore ? movie.matchScore : 90}% Semantic Match
-                        </span>
-                        <span className="text-xs text-[var(--color-text-secondary)] bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
-                          {movie.year}
-                        </span>
-                        <span className="text-xs text-[var(--color-text-secondary)] bg-white/5 border border-white/10 px-2.5 py-1 rounded-full flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {movie.runtime}
-                        </span>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-left">
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Mood / Vibe</div>
+                      <div className="text-sm font-semibold text-white truncate" title={intent.mood}>{intent.mood}</div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 text-red-400" /> Avoid
                       </div>
-
-                      <Link to={`/movie/${movie.id}`}>
-                        <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2 hover:text-[var(--color-gold)] transition-colors">
-                          {movie.title}
-                        </h2>
-                      </Link>
-
-                      <p className="text-xs text-gray-500 mb-4 font-sans">
-                        Directed by <strong className="text-gray-300 font-semibold">{movie.director}</strong> • Starring <span className="text-gray-300">{movie.actors?.slice(0, 3).join(", ")}</span>
-                      </p>
-
-                      <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-6">
-                        {movie.overview}
-                      </p>
-
-                      {/* AI Reasoning Container */}
-                      <div className="bg-gradient-to-br from-[#12110e] to-[#0c0c0c] border border-[var(--color-gold)]/15 rounded-xl p-4 flex gap-3.5 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.03),transparent_70%)] pointer-events-none" />
-                        <Brain className="h-5 w-5 text-[var(--color-gold)] shrink-0 mt-0.5" />
-                        <div>
-                          <div className="text-xs text-[var(--color-gold)] uppercase font-bold tracking-widest mb-1.5 flex items-center gap-1.5">
-                            AI Recommendation Logic
-                          </div>
-                          <p className="text-sm text-gray-300 leading-relaxed font-light">
-                            {getDynamicReasoning(movie.title)}
-                          </p>
-                        </div>
+                      <div className="text-sm font-semibold text-white truncate" title={intent.avoid}>{intent.avoid}</div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-gray-500" /> Runtime
                       </div>
-
-                      {/* Card actions */}
-                      <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between flex-wrap gap-4">
-                        <Link 
-                          to={`/movie/${movie.id}`} 
-                          className="text-xs text-[var(--color-gold)] hover:text-white font-bold tracking-wide uppercase transition-colors"
-                        >
-                          View Cinematic Profile
-                        </Link>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="ghost" className="h-8 text-xs border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white">
-                            Already Seen
-                          </Button>
-                          <Button size="sm" className="h-8 text-xs bg-[var(--color-gold)] hover:bg-[#b5952f] text-black">
-                            Save Recommendation
-                          </Button>
-                        </div>
+                      <div className="text-sm font-semibold text-white truncate" title={intent.runtime}>{intent.runtime}</div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Filter className="h-3 w-3 text-gray-500" /> Genre Mapping
                       </div>
-
+                      <div className="text-sm font-semibold text-white truncate" title={intent.genre}>{intent.genre}</div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Complexity</div>
+                      <div className="text-sm font-semibold text-[var(--color-gold)] truncate" title={intent.complexity}>{intent.complexity}</div>
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              )}
 
-              {/* Retry suggestion */}
-              <div className="pt-8 text-center">
-                <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                  Not quite what you were looking for? Try describing different aspects of your mood.
-                </p>
+              {/* Movie Matches List */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                  <h3 className="text-lg font-serif font-bold text-white flex items-center gap-2">
+                    <Sparkles className="h-4.5 w-4.5 text-[var(--color-gold)]" />
+                    AI Direct Matches
+                  </h3>
+                  <span className="text-xs text-[var(--color-text-secondary)]">Semantic search completed</span>
+                </div>
+
+                {results.map((movie, idx) => (
+                  <motion.div 
+                    key={movie.id}
+                    initial={{ opacity: 0, y: 25 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1, duration: 0.5 }}
+                    className="group relative bg-[#0d0d0d]/70 border border-white/5 rounded-2xl p-5 hover:border-[var(--color-gold)]/20 hover:shadow-[0_0_30px_rgba(212,175,55,0.03)] transition-all duration-300 overflow-hidden"
+                  >
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                      {/* Poster */}
+                      <Link to={`/movie/${movie.id}`} className="w-32 md:w-40 shrink-0 rounded-xl overflow-hidden shadow-xl border border-white/5 block aspect-[2/3]">
+                        <img 
+                          src={movie.posterUrl} 
+                          alt={movie.title} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        />
+                      </Link>
+
+                      {/* Info */}
+                      <div className="flex-1 py-0.5 w-full">
+                        <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
+                          <span className="bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 text-[var(--color-gold)] px-2.5 py-0.5 rounded-full font-bold text-[10px]">
+                            {movie.matchScore ? movie.matchScore : 90}% Semantic Match
+                          </span>
+                          <span className="text-[10px] text-[var(--color-text-secondary)] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                            {movie.year}
+                          </span>
+                          <span className="text-[10px] text-[var(--color-text-secondary)] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Clock className="h-2.5 w-2.5" /> {movie.runtime}
+                          </span>
+                        </div>
+
+                        <Link to={`/movie/${movie.id}`}>
+                          <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-1.5 hover:text-[var(--color-gold)] transition-colors">
+                            {movie.title}
+                          </h2>
+                        </Link>
+
+                        <p className="text-[11px] text-gray-500 mb-3 font-sans">
+                          Director: <strong className="text-gray-400 font-semibold">{movie.director}</strong> • Starring: <span className="text-gray-400">{movie.actors?.slice(0, 3).join(", ")}</span>
+                        </p>
+
+                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-4">
+                          {movie.overview}
+                        </p>
+
+                        {/* AI Rationale Block */}
+                        <div className="bg-gradient-to-br from-[#12110e] to-[#0a0a0a] border border-[var(--color-gold)]/10 rounded-xl p-3.5 flex gap-3 relative overflow-hidden">
+                          <Brain className="h-4 w-4 text-[var(--color-gold)] shrink-0 mt-0.5" />
+                          <div>
+                            <div className="text-[10px] text-[var(--color-gold)] uppercase font-bold tracking-wider mb-1 flex items-center gap-1">
+                              Match Reasoning
+                            </div>
+                            <p className="text-xs text-gray-300 leading-relaxed font-light">
+                              {getDynamicReasoning(movie.title)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="mt-5 pt-3.5 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
+                          <Link 
+                            to={`/movie/${movie.id}`} 
+                            className="text-[10px] text-[var(--color-gold)] hover:text-white font-bold tracking-wide uppercase transition-colors flex items-center gap-1.5"
+                          >
+                            <Eye className="h-3.5 w-3.5" /> View Cinematic Profile
+                          </Link>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px] border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white">
+                              Already Seen
+                            </Button>
+                            <Button size="sm" className="h-7 text-[10px] bg-[var(--color-gold)] hover:bg-[#b5952f] text-black">
+                              Save Match
+                            </Button>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Reset Search Button */}
+              <div className="pt-6 text-center">
                 <Button 
                   onClick={() => {
                     setSearchInput("")
                     window.scrollTo({ top: 0, behavior: "smooth" })
                   }}
                   variant="outline" 
-                  className="border-white/15 hover:bg-white/5 text-white"
+                  className="border-white/10 hover:bg-white/5 text-white"
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" /> Reset Search
+                  <RefreshCw className="mr-2 h-4.5 w-4.5" /> Start New Search
                 </Button>
               </div>
+
             </motion.div>
           ) : (
             <motion.div 
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-20 max-w-md mx-auto"
+              className="text-center py-16 max-w-md mx-auto"
             >
-              <Brain className="h-12 w-12 text-[var(--color-gold)] mx-auto mb-4 opacity-50" />
-              <h3 className="text-xl font-serif font-bold text-white mb-2">No direct semantic matches</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] mb-6">
-                Our models couldn't confidently map "{query}" to our current dataset. Try using broader terms or describing a movie you like.
+              <Brain className="h-10 w-10 text-[var(--color-gold)] mx-auto mb-3 opacity-50" />
+              <h3 className="text-lg font-serif font-bold text-white mb-1.5">No semantic matches found</h3>
+              <p className="text-xs text-[var(--color-text-secondary)] mb-5">
+                We couldn't analyze the query confidently. Try describing a simpler idea or a favorite movie name.
               </p>
               <Button 
                 onClick={() => {
