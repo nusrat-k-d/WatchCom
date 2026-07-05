@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router-dom"
-import { Clapperboard, User, Menu, X, LogOut, Film, Compass, Dna } from "lucide-react"
+import { Clapperboard, User, Menu, X, LogOut, Film, Dna, Brain, Sparkles } from "lucide-react"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useAuth } from "../../context/AuthContext"
@@ -28,15 +28,18 @@ export function Navbar() {
             </button>
             <Link to="/" className="flex items-center gap-3">
               <div className="bg-[var(--color-gold)] rounded p-1.5 flex items-center justify-center">
-                <Film className="h-5 w-5 text-black" />
+                <Brain className="h-5 w-5 text-black" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-white hidden sm:block">WatchCom</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold tracking-tight text-white hidden sm:block">WatchCom</span>
+                <span className="text-[10px] font-bold tracking-widest bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 text-[var(--color-gold)] px-1.5 py-0.5 rounded uppercase hidden sm:block">AI</span>
+              </div>
             </Link>
           </div>
           
           <div className="hidden md:flex items-center gap-6">
             <Link to="/discover" className="flex items-center gap-2 text-sm font-medium bg-[var(--color-gold)] hover:bg-[#b5952f] text-black px-4 py-2 rounded-full transition-colors">
-              <Compass className="h-4 w-4" /> Discover
+              <Sparkles className="h-4 w-4 fill-black" /> AI Assistant
             </Link>
             <Link to="/taste-dna" className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors">
               <Dna className="h-4 w-4" /> Taste DNA
@@ -69,7 +72,7 @@ export function Navbar() {
             className="md:hidden fixed top-16 left-0 right-0 z-40 bg-[var(--color-surface)] border-b border-white/10 shadow-2xl overflow-hidden"
           >
             <div className="flex flex-col py-4 px-4 space-y-4">
-              <Link to="/discover" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-white flex items-center gap-3"><Compass className="h-5 w-5" /> Discover</Link>
+              <Link to="/discover" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-white flex items-center gap-3"><Sparkles className="h-5 w-5" /> AI Assistant</Link>
               <Link to="/taste-dna" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-[var(--color-gold)] flex items-center gap-3"><Dna className="h-5 w-5" /> Taste DNA</Link>
               <Link to="/recommendations" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-white flex items-center gap-3"><Film className="h-5 w-5" /> For You</Link>
               <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="text-lg font-medium text-white flex items-center gap-3"><User className="h-5 w-5" /> Profile</Link>

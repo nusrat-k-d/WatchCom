@@ -1,144 +1,158 @@
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Search } from "lucide-react"
-import { MOCK_MOVIES } from "../lib/mock-data"
-import { useAuth } from "../context/AuthContext"
-import { useTaste } from "../context/UserTasteContext"
+import { useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
+import { Search, Brain, Sparkles, MessageSquare } from "lucide-react"
 
 export function LandingPage() {
-  const { isAuthenticated } = useAuth()
-  const { metrics } = useTaste()
-  const activeMovieIndex = 0
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedGenre, setSelectedGenre] = useState<string>("All")
 
-  const activeMovie = MOCK_MOVIES[activeMovieIndex]
-  
-  const displayGenres = ["All", "Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Thriller", "Romance", "Animation", "Documentary", "Fantasy", "Crime", "Adventure"]
+  const chips = [
+    "Mind Blowing",
+    "Feel Good",
+    "I Want To Cry",
+    "Psychological Thriller",
+    "Weekend Binge",
+    "Date Night",
+    "Family Night",
+    "Comfort Movie",
+    "Hidden Gem",
+    "Mind-Bending Sci-Fi",
+    "Plot Twist",
+    "Underrated Masterpiece"
+  ]
+
+  const chipPrompts: Record<string, string> = {
+    "Mind Blowing": "A mind-blowing movie with an insane concept that makes me question reality",
+    "Feel Good": "A feel-good, heartwarming movie to lift my spirits and make me smile",
+    "I Want To Cry": "An emotional, tear-jerking drama that will make me cry",
+    "Psychological Thriller": "A tense psychological thriller with a complex plot that keeps me guessing",
+    "Weekend Binge": "An addictive movie series or high-stakes film perfect for a weekend binge",
+    "Date Night": "An engaging, romantic, or witty movie perfect for a luxury date night",
+    "Family Night": "A fun, high-quality movie that both kids and adults will love for family night",
+    "Comfort Movie": "A cozy comfort movie that feels like a warm hug and is easy to watch",
+    "Hidden Gem": "An underrated, lesser-known masterpiece that is a true hidden gem",
+    "Mind-Bending Sci-Fi": "A mind-bending sci-fi film like Interstellar or Inception with deep concepts",
+    "Plot Twist": "A movie with a massive plot twist at the end that I won't see coming",
+    "Underrated Masterpiece": "A critically acclaimed but underrated masterpiece that deserves more attention"
+  }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/ai-results?q=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
+  const handleChipClick = (chip: string) => {
+    const prompt = chipPrompts[chip] || chip
+    setSearchQuery(prompt)
+    
+    // Auto-navigate after a brief delay so the user sees the input populate
+    setTimeout(() => {
+      navigate(`/ai-results?q=${encodeURIComponent(prompt)}`)
+    }, 400)
+  }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-[#0a0a0a]">
-      {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={activeMovieIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            className="absolute inset-0 z-0"
-          >
-            <img 
-              src={activeMovie.backdropUrl || activeMovie.posterUrl} 
-              alt="Hero background" 
-              className="w-full h-full object-cover object-top opacity-40"
-            />
-            {/* Gradient to match the reference image (darker on bottom and left) */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent" />
-          </motion.div>
-        </AnimatePresence>
-        
-        <div className="container relative z-10 mx-auto px-4 md:px-8 mt-20">
-          <div className="max-w-3xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-[var(--color-gold)] font-bold tracking-widest text-sm mb-4 uppercase flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[var(--color-gold)] animate-pulse" /> AI-Powered Movie Discovery
-              </h2>
-              <h1 className="text-5xl sm:text-6xl md:text-8xl font-serif font-bold tracking-tight mb-6 text-white leading-tight">
-                Your Taste. <br />Understood.
-              </h1>
-              <p className="text-lg md:text-2xl text-gray-400 mb-10 max-w-xl font-light">
-                Stop scrolling. Start watching smarter with mathematical taste matching.
-              </p>
-            </motion.div>
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-[#050505] text-[#F5F5F5] relative overflow-hidden">
+      
+      {/* Premium Luxury Background Ambient Glows */}
+      <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08),transparent_60%)] pointer-events-none z-0 blur-[40px]" />
+      <div className="absolute -top-[10%] left-[10%] w-[300px] h-[300px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.03),transparent_70%)] pointer-events-none z-0 blur-[50px]" />
+      <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.04),transparent_60%)] pointer-events-none z-0 blur-[60px]" />
 
-            {/* Search Bar */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative max-w-2xl mb-12"
-            >
-              <div className="relative flex items-center w-full bg-white/5 border border-white/10 rounded-lg overflow-hidden backdrop-blur-sm focus-within:ring-1 focus-within:ring-white/30 transition-all">
-                <Search className="absolute left-4 h-5 w-5 text-gray-500" />
-                <input 
+      {/* Main Conversational Interface Section */}
+      <section className="flex-1 flex items-center justify-center py-12 md:py-24 px-4 relative z-10">
+        <div className="max-w-4xl w-full text-center flex flex-col items-center">
+          
+          {/* Glowing Premium AI Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-[rgba(212,175,55,0.12)] to-[rgba(212,175,55,0.02)] border border-[var(--color-gold)]/20 px-4 py-2 rounded-full text-xs font-bold tracking-widest text-[var(--color-gold)] uppercase mb-8 shadow-xl"
+          >
+            <Brain className="h-4 w-4 animate-pulse text-[var(--color-gold)]" />
+            WatchCom Conversational Director
+          </motion.div>
+
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold tracking-tight mb-6 text-white leading-tight"
+          >
+            What should you <span className="text-[var(--color-gold)]">watch tonight?</span>
+          </motion.h1>
+
+          {/* Subheading */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] mb-10 max-w-2xl font-light leading-relaxed"
+          >
+            Describe your mood, situation, or the kind of story you're looking for. WatchCom understands natural language and recommends movies based on intent—not just genres.
+          </motion.p>
+
+          {/* Search Box */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="w-full max-w-3xl mb-10"
+          >
+            <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-[#0d0d0d]/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden focus-within:border-[var(--color-gold)]/50 focus-within:shadow-[0_0_35px_rgba(212,175,55,0.18)] transition-all duration-300 p-1.5 shadow-2xl">
+              <div className="flex items-center flex-1 pl-4">
+                <Search className="h-5 w-5 text-gray-500 shrink-0" />
+                <input
                   type="text"
-                  placeholder="Search films..." 
-                  className="w-full bg-transparent text-white pl-12 pr-4 py-4 outline-none placeholder:text-gray-600"
+                  placeholder="Example: I want something like Interstellar but easier to understand..."
+                  className="w-full bg-transparent text-white pl-4 pr-4 py-4 md:py-5 outline-none placeholder:text-gray-600 text-sm sm:text-base font-sans"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-            </motion.div>
-
-            {/* Genre Pills */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="flex flex-wrap gap-3"
-            >
-              {displayGenres.map((genre) => (
-                <button
-                  key={genre}
-                  onClick={() => setSelectedGenre(genre)}
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${
-                    selectedGenre === genre 
-                      ? "bg-[var(--color-gold)] text-black shadow-lg shadow-[var(--color-gold)]/20" 
-                      : "bg-[#1c1c1e] text-gray-300 hover:bg-[#2c2c2e] hover:text-white"
-                  }`}
-                >
-                  {genre}
-                </button>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Taste Snapshot Panel */}
-        {isAuthenticated && (
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="hidden lg:block absolute right-12 top-1/2 -translate-y-1/2 w-80 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl"
-          >
-            <div className="mb-6 border-b border-white/10 pb-4">
-              <h3 className="text-[var(--color-gold)] font-bold tracking-widest text-xs uppercase mb-1">Taste Snapshot</h3>
-              <p className="text-white text-lg font-serif">Your Profile</p>
-            </div>
-            
-            <div className="space-y-6">
-              <div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Favorite Genre</div>
-                <div className="text-xl font-bold text-white">Sci-Fi</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Movies Rated</div>
-                <div className="text-xl font-bold text-white">{metrics.totalRated}</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Recommendation Confidence</div>
-                <div className="text-xl font-bold text-green-400">{metrics.confidence > 70 ? "High" : "Learning"} ({metrics.confidence}%)</div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs text-gray-500 uppercase tracking-wider mb-2">
-                  <span>Profile Completion</span>
-                  <span className="text-[var(--color-gold)]">{metrics.profileStrength}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-[var(--color-gold)]" style={{ width: `${metrics.profileStrength}%` }} />
-                </div>
-              </div>
-            </div>
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-[var(--color-gold)] to-[#b5952f] text-black px-6 md:px-8 py-3.5 md:py-4 rounded-xl font-bold text-sm sm:text-base hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 shadow-lg cursor-pointer"
+              >
+                <Sparkles className="h-4.5 w-4.5 fill-black" />
+                <span>Search</span>
+              </button>
+            </form>
           </motion.div>
-        )}
+
+          {/* Suggestion Chips Title */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-text-secondary)] mb-4"
+          >
+            <MessageSquare className="h-3.5 w-3.5" /> Or try starting with a concept
+          </motion.div>
+
+          {/* Interactive Suggestion Chips */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="flex flex-wrap justify-center gap-2.5 max-w-3xl"
+          >
+            {chips.map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleChipClick(chip)}
+                className="px-4 py-2.5 rounded-full text-xs md:text-sm font-medium bg-[#111112] border border-white/5 text-gray-300 hover:text-[var(--color-gold)] hover:border-[var(--color-gold)]/30 hover:bg-[#161618] active:scale-95 transition-all shadow-md cursor-pointer duration-300"
+              >
+                {chip}
+              </button>
+            ))}
+          </motion.div>
+        </div>
       </section>
     </div>
   )

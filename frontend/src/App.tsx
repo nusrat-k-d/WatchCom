@@ -12,6 +12,7 @@ import { WatchlistPage } from "./pages/WatchlistPage"
 import { ProfilePage } from "./pages/ProfilePage"
 import { TasteDnaPage } from "./pages/TasteDnaPage"
 import { NotFoundPage } from "./pages/NotFoundPage"
+import { AiResultsPage } from "./pages/AiResultsPage"
 import { AuthProvider } from "./context/AuthContext"
 import { UserTasteProvider } from "./context/UserTasteContext"
 
@@ -28,6 +29,7 @@ function App() {
               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/discover" element={<DiscoverPage />} />
+              <Route path="/ai-results" element={<AiResultsPage />} />
               <Route path="/movie/:id" element={<MovieDetailsPage />} />
               <Route path="/recommendations" element={<RecommendationsPage />} />
               <Route path="/rate-queue" element={<WatchlistPage />} />
