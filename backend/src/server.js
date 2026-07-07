@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// console.log("TMDB_API_KEY:", process.env.TMDB_API_KEY);
 import mongoose from 'mongoose';
 import app from './app.js';
 
