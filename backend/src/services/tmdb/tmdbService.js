@@ -135,3 +135,10 @@ export const getMovieImages = async (movieId) => {
 export const getGenres = async (language = 'en-US') => {
   return fetchFromTMDB('/genre/movie/list', { language });
 };
+
+/**
+ * Discover movies by genres
+ */
+export const discoverMoviesByGenres = async (genreIds, page = 1) => {
+  return fetchFromTMDB('/discover/movie', { with_genres: genreIds, page });
+};

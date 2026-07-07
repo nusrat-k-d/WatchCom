@@ -4,6 +4,7 @@ import { logger } from './middleware/logger.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 import movieRoutes from './routes/movieRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import recommendationRoutes from "./routes/recommendationRoutes.js";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get('/', (req, res) => {
 // API routes
 app.use('/api/movies', movieRoutes);
 app.use('/api/ai', aiRoutes);
+app.use("/api/ai/recommend", recommendationRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
