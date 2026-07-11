@@ -1,10 +1,51 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Sparkles, ArrowLeft, Clock, Brain, RefreshCw, CheckCircle2, AlertCircle, Filter } from "lucide-react"
+import { Search, Sparkles, ArrowLeft, Clock, Brain, RefreshCw, CheckCircle2, AlertCircle, Filter, ArrowUpRight } from "lucide-react"
 import type { Movie } from "../lib/mock-data"
 import { Button } from "../components/ui/button"
 import { MovieCard } from "../components/movies/MovieCard"
+
+const AUTOCOMPLETE_SUGGESTIONS = [
+  "Interstellar",
+  "Arrival",
+  "Contact",
+  "The Martian",
+  "Inception",
+  "The Dark Knight",
+  "Coherence",
+  "Primer",
+  "Moon",
+  "Gravity",
+  "Blade Runner 2049",
+  "Ex Machina"
+]
+
+interface RawCandidate {
+  id: number
+  title?: string
+  original_title?: string
+  overview?: string
+  poster_path?: string
+  release_date?: string
+  vote_average?: number
+  genre_ids?: number[]
+  runtime?: number
+  popularity?: number
+  watchComScore?: number
+}
+
+interface RecommendationResponse {
+  intent?: {
+    mood?: string
+    avoid?: string[]
+    runtime?: number
+    genres?: string[]
+    complexity?: string
+  }
+  candidates?: RawCandidate[]
+  recommendations?: RawCandidate[]
+}
 
 interface ExtractedIntent {
   mood: string
@@ -25,6 +66,15 @@ export function AiResultsPage() {
   const [results, setResults] = useState<Movie[]>([])
   const [intent, setIntent] = useState<ExtractedIntent | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isFocused, setIsFocused] = useState(false)
+
+  const suggestions = useMemo(() => {
+    if (!searchInput.trim()) return []
+    return AUTOCOMPLETE_SUGGESTIONS.filter(item => 
+      item.toLowerCase().includes(searchInput.toLowerCase()) && 
+      item.toLowerCase() !== searchInput.toLowerCase()
+    )
+  }, [searchInput])
 
   const loadingStages = [
     "Understanding your request...",
@@ -86,7 +136,7 @@ export function AiResultsPage() {
     setCompletedSteps([])
     setError(null)
 
-    let apiData: any = null
+    let apiData: RecommendationResponse | null = null
     let apiError: string | null = null
     let isApiDone = false
 
@@ -107,9 +157,9 @@ export function AiResultsPage() {
 
         const data = await response.json()
         apiData = data
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("API Error:", err)
-        apiError = err.message || "Failed to fetch recommendations from the server."
+        apiError = err instanceof Error ? err.message : "Failed to fetch recommendations from the server."
       } finally {
         isApiDone = true
       }
@@ -175,7 +225,7 @@ export function AiResultsPage() {
                   37: 'Western'
                 }
 
-                const mapped: Movie[] = rawCandidates.map((m: any) => {
+                const mapped: Movie[] = rawCandidates.map((m: RawCandidate) => {
                   const genres = Array.isArray(m.genre_ids)
                     ? m.genre_ids.map((id: number) => GENRE_ID_TO_NAME[id] || '').filter(Boolean)
                     : []
@@ -270,21 +320,61 @@ export function AiResultsPage() {
           </motion.div>
 
           <form onSubmit={handleSearchSubmit} className="relative w-full mb-4">
-            <div className="relative flex items-center bg-[#0d0d0d] border border-white/10 rounded-full overflow-hidden shadow-2xl focus-within:border-[var(--color-gold)]/50 focus-within:shadow-[0_0_25px_rgba(212,175,55,0.15)] transition-all">
-              <Search className="absolute left-6 h-5 w-5 text-gray-500" />
-              <input 
-                type="text"
-                placeholder="Describe what you want to watch..." 
-                className="w-full bg-transparent text-white pl-14 pr-32 py-5 outline-none text-base placeholder:text-gray-600 font-sans"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
+            <div 
+              className={`relative flex items-center bg-[#0b0b0c]/80 backdrop-blur-xl border rounded-2xl overflow-visible p-2 shadow-2xl transition-all duration-500 ${
+                isFocused 
+                  ? "border-[#C9A227]/50 shadow-[0_0_40px_rgba(201,162,39,0.15)] bg-black/90" 
+                  : "border-white/10"
+              }`}
+            >
+              <div className="flex items-center flex-1 pl-4">
+                <Search className={`h-5 w-5 transition-colors ${isFocused ? "text-[#C9A227]" : "text-gray-500"}`} />
+                <input 
+                  type="text"
+                  placeholder="Describe what you want to watch..." 
+                  className="w-full bg-transparent text-white pl-4 pr-4 py-4 outline-none placeholder:text-gray-600 text-sm sm:text-base font-sans"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+                />
+              </div>
               <button 
                 type="submit" 
-                className="absolute right-3 bg-[var(--color-gold)] hover:bg-[#b5952f] text-black px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg hover:shadow-[var(--color-gold)]/20 cursor-pointer"
+                className="bg-[#C9A227] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 Refine
               </button>
+
+              {/* Autocomplete Overlay */}
+              <AnimatePresence>
+                {isFocused && suggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute top-full left-0 right-0 mt-3 bg-[#0B0B0B] border border-white/10 rounded-xl overflow-hidden z-30 shadow-2xl"
+                  >
+                    <div className="p-2 text-left text-[9px] text-gray-500 tracking-wider uppercase font-semibold border-b border-white/5 bg-black/40">
+                      Suggested Movies
+                    </div>
+                    {suggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => {
+                          setSearchInput(`Tell me more about ${suggestion} and movies like it`)
+                          setSearchParams({ q: `Tell me more about ${suggestion} and movies like it` })
+                        }}
+                        className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors text-sm text-gray-300 hover:text-white flex items-center justify-between"
+                      >
+                        <span>{suggestion}</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 text-gray-500" />
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </form>
         </div>
@@ -414,8 +504,8 @@ export function AiResultsPage() {
                       <h4 className="font-serif font-bold text-white text-lg sm:text-xl">WatchCom AI Intent Extraction</h4>
                       <p className="text-xs text-[var(--color-text-secondary)] font-light">Extracted thematic attributes mapped from your request.</p>
                     </div>
-                    <div className="ml-auto bg-green-500/10 border border-green-500/20 text-green-400 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    <div className="ml-auto bg-[#C9A227]/10 border border-[#C9A227]/30 text-[#C9A227] text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 tracking-wider font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227] animate-pulse" />
                       {intent.confidence}% Confidence
                     </div>
                   </div>
