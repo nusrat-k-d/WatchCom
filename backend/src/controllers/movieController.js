@@ -86,3 +86,21 @@ export const getSimilarMovies = asyncHandler(async (req, res) => {
   const data = await tmdbService.getSimilarMovies(movieId, parsedPage);
   res.status(200).json(data);
 });
+
+/**
+ * Controller for getting movie videos (trailers, clips, etc)
+ * Route: GET /api/movies/:id/videos
+ */
+export const getMovieVideos = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const movieId = parseInt(id, 10);
+
+  if (isNaN(movieId) || movieId <= 0) {
+    const error = new Error('Movie ID must be a valid positive integer');
+    error.status = 400;
+    throw error;
+  }
+
+  const data = await tmdbService.getMovieVideos(movieId);
+  res.status(200).json(data);
+});

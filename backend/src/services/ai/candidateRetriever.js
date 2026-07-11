@@ -127,7 +127,10 @@ export const getCandidateMovies = async (intent) => {
     overview: movie.overview || '',
     poster_path: movie.poster_path || null,
     release_date: movie.release_date || null,
-    vote_average: movie.vote_average || 0
+    vote_average: movie.vote_average || 0,
+    genre_ids: movie.genre_ids || (movie.genres ? movie.genres.map(g => g.id) : []),
+    runtime: movie.runtime || null,
+    popularity: movie.popularity || 0
   }));
 
   // Step 5: Return only the first 20 candidate movies

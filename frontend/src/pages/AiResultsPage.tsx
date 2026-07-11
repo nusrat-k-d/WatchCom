@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Sparkles, ArrowLeft, Clock, Brain, RefreshCw, CheckCircle2, AlertCircle, Filter, Eye } from "lucide-react"
-import { MOCK_MOVIES } from "../lib/mock-data"
+import { Search, Sparkles, ArrowLeft, Clock, Brain, RefreshCw, CheckCircle2, AlertCircle, Filter } from "lucide-react"
 import type { Movie } from "../lib/mock-data"
 import { Button } from "../components/ui/button"
+import { MovieCard } from "../components/movies/MovieCard"
 
 interface ExtractedIntent {
   mood: string
@@ -24,6 +24,7 @@ export function AiResultsPage() {
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [results, setResults] = useState<Movie[]>([])
   const [intent, setIntent] = useState<ExtractedIntent | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const loadingStages = [
     "Understanding your request...",
@@ -33,68 +34,22 @@ export function AiResultsPage() {
     "Preparing explanations..."
   ]
 
-  // Dynamic intent parser based on query input
-  const parseIntent = (inputQuery: string): ExtractedIntent => {
-    const q = inputQuery.toLowerCase()
-    
-    // Default intent
-    let mood = "Cerebral / Absorbing"
-    let avoid = "None specified"
-    let runtime = "Any"
-    let genre = "Drama / Science Fiction"
-    let complexity = "Medium"
-    let confidence = 88
 
-    // Rule-based heuristic extraction
-    if (q.includes("mind blowing") || q.includes("mind-blowing") || q.includes("mind bending") || q.includes("mind-bending")) {
-      mood = "Mind Blowing"
-      complexity = "Extremely High"
-      genre = "Sci-Fi / Mystery"
-      confidence = 96
-    } else if (q.includes("feel good") || q.includes("feel-good") || q.includes("happy") || q.includes("comfort")) {
-      mood = "Uplifting / Warm"
-      complexity = "Light / Accessible"
-      genre = "Comedy / Drama / Music"
-      confidence = 94
-    } else if (q.includes("cry") || q.includes("sad") || q.includes("emotional")) {
-      mood = "Melancholic / Cathartic"
-      complexity = "High"
-      genre = "Drama / Romance"
-      confidence = 92
-    } else if (q.includes("thriller") || q.includes("psychological") || q.includes("twist")) {
-      mood = "Suspenseful / Tense"
-      complexity = "High"
-      genre = "Thriller / Mystery / Crime"
-      confidence = 95
+
+  // Save scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isLoading && results.length > 0) {
+        sessionStorage.setItem("watchcom_last_scroll_y", String(window.scrollY))
+      }
     }
-
-    if (q.includes("depressing") || q.includes("sad")) {
-      avoid = "Depressing / Heavy themes"
-    } else if (q.includes("horror") || q.includes("scary")) {
-      avoid = "Jump scares / Horror"
-    } else if (q.includes("action") && q.includes("no")) {
-      avoid = "Heavy action / Explosions"
+    window.addEventListener("scroll", handleScroll)
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
     }
+  }, [isLoading, results])
 
-    if (q.includes("short") || q.includes("quick") || q.includes("under 2 hours")) {
-      runtime = "Under 120 minutes"
-    } else if (q.includes("long") || q.includes("epic")) {
-      runtime = "Over 150 minutes"
-    }
-
-    if (q.includes("sci-fi") || q.includes("scifi") || q.includes("space") || q.includes("interstellar")) {
-      genre = "Science Fiction"
-    } else if (q.includes("music") || q.includes("whiplash") || q.includes("jazz")) {
-      genre = "Drama / Music"
-    } else if (q.includes("nolan") || q.includes("director")) {
-      genre = "Auteur Cinema"
-      complexity = "High"
-    }
-
-    return { mood, avoid, runtime, genre, complexity, confidence }
-  }
-
-  // AI Pipeline Request Lifecycle Simulation
+  // AI Pipeline Request Lifecycle
   useEffect(() => {
     if (!query) {
       setResults([])
@@ -102,110 +57,180 @@ export function AiResultsPage() {
       return
     }
 
+    // Check if we have cached results for this query in sessionStorage
+    const cachedQuery = sessionStorage.getItem("watchcom_last_search_query")
+    const cachedResults = sessionStorage.getItem("watchcom_last_search_results")
+    const cachedIntent = sessionStorage.getItem("watchcom_last_search_intent")
+
+    if (cachedQuery === query && cachedResults && cachedIntent) {
+      try {
+        setResults(JSON.parse(cachedResults))
+        setIntent(JSON.parse(cachedIntent))
+        setIsLoading(false)
+        
+        // Restore scroll position after DOM rendering
+        const scrollY = sessionStorage.getItem("watchcom_last_scroll_y")
+        if (scrollY) {
+          setTimeout(() => {
+            window.scrollTo(0, parseInt(scrollY, 10))
+          }, 150)
+        }
+        return
+      } catch (e) {
+        console.error("Error restoring search cache:", e)
+      }
+    }
+
     setIsLoading(true)
     setLoadingStep(0)
     setCompletedSteps([])
+    setError(null)
 
-    // Parse the query intent immediately
-    const extractedIntent = parseIntent(query)
-    setIntent(extractedIntent)
+    let apiData: any = null
+    let apiError: string | null = null
+    let isApiDone = false
 
-    // Simulate animated loading stages sequence
-    // Total 5 stages. We change stage every 600ms, marking the previous step completed.
+    // Start API request
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/ai/recommend", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ query })
+        })
+
+        if (!response.ok) {
+          throw new Error(`Server returned status ${response.status}`)
+        }
+
+        const data = await response.json()
+        apiData = data
+      } catch (err: any) {
+        console.error("API Error:", err)
+        apiError = err.message || "Failed to fetch recommendations from the server."
+      } finally {
+        isApiDone = true
+      }
+    }
+
+    fetchData()
+
+    // Loading stages sequence
     const interval = setInterval(() => {
       setLoadingStep((current) => {
         if (current < loadingStages.length - 1) {
           setCompletedSteps((prev) => [...prev, current])
           return current + 1
         } else {
-          setCompletedSteps((prev) => [...prev, current])
+          // We reached the last step. Stop the interval.
           clearInterval(interval)
+          
+          // Now wait until API is done (it might already be done)
+          const checkCompletion = () => {
+            if (isApiDone) {
+              if (apiError) {
+                setError(apiError)
+                setResults([])
+                setIsLoading(false)
+              } else if (apiData) {
+                const rawCandidates = apiData.candidates || apiData.recommendations || []
+                
+                // Map intent
+                const backendIntent = apiData.intent
+                let mappedIntent = null
+                if (backendIntent) {
+                  mappedIntent = {
+                    mood: backendIntent.mood || "Any",
+                    avoid: backendIntent.avoid && backendIntent.avoid.length > 0 ? backendIntent.avoid.join(", ") : "None specified",
+                    runtime: backendIntent.runtime ? `Under ${backendIntent.runtime} mins` : "Any",
+                    genre: backendIntent.genres && backendIntent.genres.length > 0 ? backendIntent.genres.join(", ") : "Any",
+                    complexity: backendIntent.complexity || "Medium",
+                    confidence: 92
+                  }
+                  setIntent(mappedIntent)
+                }
+                
+                // Map candidates to frontend Movie type
+                const GENRE_ID_TO_NAME: Record<number, string> = {
+                  28: 'Action',
+                  12: 'Adventure',
+                  16: 'Animation',
+                  35: 'Comedy',
+                  80: 'Crime',
+                  99: 'Documentary',
+                  18: 'Drama',
+                  10751: 'Family',
+                  14: 'Fantasy',
+                  36: 'History',
+                  27: 'Horror',
+                  10402: 'Music',
+                  9648: 'Mystery',
+                  10749: 'Romance',
+                  878: 'Sci-Fi',
+                  10770: 'TV Movie',
+                  53: 'Thriller',
+                  10752: 'War',
+                  37: 'Western'
+                }
+
+                const mapped: Movie[] = rawCandidates.map((m: any) => {
+                  const genres = Array.isArray(m.genre_ids)
+                    ? m.genre_ids.map((id: number) => GENRE_ID_TO_NAME[id] || '').filter(Boolean)
+                    : []
+                  if (genres.length === 0) genres.push('Drama')
+
+                  const releaseYear = m.release_date ? parseInt(m.release_date.split('-')[0], 10) : 0
+
+                  return {
+                    id: String(m.id),
+                    title: m.title || 'Untitled',
+                    year: isNaN(releaseYear) ? 0 : releaseYear,
+                    runtime: m.runtime ? `${m.runtime} min` : 'N/A',
+                    genres,
+                    overview: m.overview || '',
+                    posterUrl: m.poster_path 
+                      ? `https://image.tmdb.org/t/p/w500${m.poster_path}` 
+                      : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500',
+                    rating: m.vote_average ? Number((m.vote_average / 2).toFixed(1)) : 0,
+                    matchScore: m.watchComScore || 0
+                  }
+                })
+
+                setResults(mapped)
+                setIsLoading(false)
+
+                // Cache results in sessionStorage
+                try {
+                  sessionStorage.setItem("watchcom_last_search_query", query)
+                  sessionStorage.setItem("watchcom_last_search_results", JSON.stringify(mapped))
+                  if (mappedIntent) {
+                    sessionStorage.setItem("watchcom_last_search_intent", JSON.stringify(mappedIntent))
+                  }
+                  sessionStorage.setItem("watchcom_last_scroll_y", "0")
+                } catch (e) {
+                  console.error("Error setting search cache:", e)
+                }
+              } else {
+                setError("No data received from the recommendation server.")
+                setResults([])
+                setIsLoading(false)
+              }
+            } else {
+              // Wait 100ms and check again
+              setTimeout(checkCompletion, 100)
+            }
+          }
+
+          checkCompletion()
           return current
         }
       })
     }, 650)
 
-    const timer = setTimeout(() => {
-      const lowerQuery = query.toLowerCase()
-      let matchedMovies: Movie[] = []
-
-      // Heuristic Mock Matcher
-      if (
-        lowerQuery.includes("sci-fi") ||
-        lowerQuery.includes("scifi") ||
-        lowerQuery.includes("interstellar") ||
-        lowerQuery.includes("space") ||
-        lowerQuery.includes("future") ||
-        lowerQuery.includes("dimension") ||
-        lowerQuery.includes("universe") ||
-        lowerQuery.includes("bending") ||
-        lowerQuery.includes("blowing")
-      ) {
-        matchedMovies = MOCK_MOVIES.filter(m => 
-          m.genres.includes("Sci-Fi") || 
-          m.title === "Interstellar" || 
-          m.title === "Inception" ||
-          m.title === "Primer" ||
-          m.title === "Coherence" ||
-          m.title === "Moon"
-        )
-      } else if (
-        lowerQuery.includes("thriller") ||
-        lowerQuery.includes("psychological") ||
-        lowerQuery.includes("suspense") ||
-        lowerQuery.includes("mystery") ||
-        lowerQuery.includes("twist") ||
-        lowerQuery.includes("dark")
-      ) {
-        matchedMovies = MOCK_MOVIES.filter(m => 
-          m.genres.includes("Thriller") || 
-          m.genres.includes("Mystery") ||
-          m.title === "Fight Club" ||
-          m.title === "Inception" ||
-          m.title === "The Dark Knight"
-        )
-      } else if (
-        lowerQuery.includes("feel good") ||
-        lowerQuery.includes("happy") ||
-        lowerQuery.includes("comfort") ||
-        lowerQuery.includes("comedy") ||
-        lowerQuery.includes("uplifting")
-      ) {
-        matchedMovies = MOCK_MOVIES.filter(m => 
-          m.genres.includes("Music") || 
-          m.genres.includes("Comedy") ||
-          m.title === "Whiplash" ||
-          m.title === "Pulp Fiction"
-        )
-      } else if (
-        lowerQuery.includes("cry") ||
-        lowerQuery.includes("sad") ||
-        lowerQuery.includes("emotional") ||
-        lowerQuery.includes("drama") ||
-        lowerQuery.includes("heart")
-      ) {
-        matchedMovies = MOCK_MOVIES.filter(m => 
-          m.genres.includes("Drama") || 
-          m.title === "Interstellar" || 
-          m.title === "Whiplash"
-        )
-      } else if (lowerQuery.includes("underrated") || lowerQuery.includes("gem") || lowerQuery.includes("hidden")) {
-        matchedMovies = MOCK_MOVIES.filter(m => m.discoveryScore && m.discoveryScore > 90)
-      } else {
-        matchedMovies = [MOCK_MOVIES[0], MOCK_MOVIES[1], MOCK_MOVIES[7], MOCK_MOVIES[8]]
-      }
-
-      if (matchedMovies.length === 0) {
-        matchedMovies = MOCK_MOVIES.slice(0, 4)
-      }
-
-      setResults(matchedMovies)
-      setIsLoading(false)
-    }, 3800) // End after ~3.8 seconds to display progress correctly
-
     return () => {
       clearInterval(interval)
-      clearTimeout(timer)
     }
   }, [query])
 
@@ -213,34 +238,6 @@ export function AiResultsPage() {
     e.preventDefault()
     if (searchInput.trim()) {
       setSearchParams({ q: searchInput.trim() })
-    }
-  }
-
-  const getDynamicReasoning = (movieTitle: string) => {
-    const queryText = query.length > 40 ? `"${query.substring(0, 37)}..."` : `"${query}"`
-    switch (movieTitle) {
-      case "Interstellar":
-        return `Matches your search for ${queryText}. Christopher Nolan's cosmic odyssey combines physics-defying science with a powerful father-daughter bond, perfectly fulfilling your craving for emotional and intellectual scale.`
-      case "Inception":
-        return `Matches your search for ${queryText}. An unparalleled heist thriller centered in the architecture of dreams. It caters directly to your intent for high-intensity, cerebral storytelling with intricate plots.`
-      case "The Dark Knight":
-        return `Matches your search for ${queryText}. The gold standard of dark, gritty crime dramas. Nolan's masterpiece explores the psychological conflict of chaos and justice, perfectly aligning with your preference for premium character studies.`
-      case "Fight Club":
-        return `Matches your search for ${queryText}. A cult classic that dissects modern identity and existential dread. Featuring a legendary narrative twist, it matches your request for dark, rebellious psychological journeys.`
-      case "The Matrix":
-        return `Matches your search for ${queryText}. A landmark cyberpunk sci-fi that questions the fabric of reality. Combining philosophy with ground-breaking action, it aligns with your search for mind-expanding masterpieces.`
-      case "Whiplash":
-        return `Matches your search for ${queryText}. An intense, rhythm-driven drama that examines the price of artistic perfection. Its blistering pacing and raw emotional friction provide a thrilling, unforgettable watch.`
-      case "Pulp Fiction":
-        return `Matches your search for ${queryText}. Quentin Tarantino's highly stylized crime comedy defined a generation of cinema. Its nonlinear format and razor-sharp dialogue offer a rich, engaging entertainment option.`
-      case "Primer":
-        return `Matches your search for ${queryText}. A legendary micro-budget time-travel puzzle. As a true hidden gem, its uncompromisingly logical structure makes it the ultimate intellectual watch for complex sci-fi lovers.`
-      case "Coherence":
-        return `Matches your search for ${queryText}. A tense, dialogue-driven thriller exploring alternate realities during a comet passing. A stellar recommendation for suspense that relies on psychological mystery rather than action.`
-      case "Moon":
-        return `Matches your search for ${queryText}. A beautiful, isolated character study of an astronaut nearing the end of his lunar shift. It aligns with your search for atmospheric, quiet sci-fi with a human soul.`
-      default:
-        return `Matches your search for ${queryText}. Curated by our AI engine because its underlying emotional themes, genre mixture, and storytelling tempo mathematically align with your input intent.`
     }
   }
 
@@ -360,6 +357,27 @@ export function AiResultsPage() {
                 WatchCom AI Engine v1.0
               </p>
             </motion.div>
+          ) : error ? (
+            <motion.div 
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16 max-w-md mx-auto"
+            >
+              <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
+              <h3 className="text-lg font-serif font-bold text-white mb-1.5">Error fetching recommendations</h3>
+              <p className="text-xs text-red-400 mb-5">
+                {error}
+              </p>
+              <Button 
+                onClick={() => {
+                  setSearchParams({ q: query })
+                }}
+                className="bg-[var(--color-gold)] hover:bg-[#b5952f] text-black"
+              >
+                Retry Search
+              </Button>
+            </motion.div>
           ) : results.length > 0 ? (
             <motion.div 
               key="results"
@@ -433,7 +451,7 @@ export function AiResultsPage() {
                 </motion.div>
               )}
 
-              {/* Movie Matches List */}
+              {/* Movie Matches Grid */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between border-b border-white/5 pb-3">
                   <h3 className="text-lg font-serif font-bold text-white flex items-center gap-2">
@@ -443,87 +461,11 @@ export function AiResultsPage() {
                   <span className="text-xs text-[var(--color-text-secondary)]">Semantic search completed</span>
                 </div>
 
-                {results.map((movie, idx) => (
-                  <motion.div 
-                    key={movie.id}
-                    initial={{ opacity: 0, y: 25 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1, duration: 0.5 }}
-                    className="group relative bg-[#0d0d0d]/70 border border-white/5 rounded-2xl p-5 hover:border-[var(--color-gold)]/20 hover:shadow-[0_0_30px_rgba(212,175,55,0.03)] transition-all duration-300 overflow-hidden"
-                  >
-                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                      {/* Poster */}
-                      <Link to={`/movie/${movie.id}`} className="w-32 md:w-40 shrink-0 rounded-xl overflow-hidden shadow-xl border border-white/5 block aspect-[2/3]">
-                        <img 
-                          src={movie.posterUrl} 
-                          alt={movie.title} 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                        />
-                      </Link>
-
-                      {/* Info */}
-                      <div className="flex-1 py-0.5 w-full">
-                        <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
-                          <span className="bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 text-[var(--color-gold)] px-2.5 py-0.5 rounded-full font-bold text-[10px]">
-                            {movie.matchScore ? movie.matchScore : 90}% Semantic Match
-                          </span>
-                          <span className="text-[10px] text-[var(--color-text-secondary)] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-                            {movie.year}
-                          </span>
-                          <span className="text-[10px] text-[var(--color-text-secondary)] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Clock className="h-2.5 w-2.5" /> {movie.runtime}
-                          </span>
-                        </div>
-
-                        <Link to={`/movie/${movie.id}`}>
-                          <h2 className="text-xl sm:text-2xl font-serif font-bold text-white mb-1.5 hover:text-[var(--color-gold)] transition-colors">
-                            {movie.title}
-                          </h2>
-                        </Link>
-
-                        <p className="text-[11px] text-gray-500 mb-3 font-sans">
-                          Director: <strong className="text-gray-400 font-semibold">{movie.director}</strong> • Starring: <span className="text-gray-400">{movie.actors?.slice(0, 3).join(", ")}</span>
-                        </p>
-
-                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-4">
-                          {movie.overview}
-                        </p>
-
-                        {/* AI Rationale Block */}
-                        <div className="bg-gradient-to-br from-[#12110e] to-[#0a0a0a] border border-[var(--color-gold)]/10 rounded-xl p-3.5 flex gap-3 relative overflow-hidden">
-                          <Brain className="h-4 w-4 text-[var(--color-gold)] shrink-0 mt-0.5" />
-                          <div>
-                            <div className="text-[10px] text-[var(--color-gold)] uppercase font-bold tracking-wider mb-1 flex items-center gap-1">
-                              Match Reasoning
-                            </div>
-                            <p className="text-xs text-gray-300 leading-relaxed font-light">
-                              {getDynamicReasoning(movie.title)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="mt-5 pt-3.5 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
-                          <Link 
-                            to={`/movie/${movie.id}`} 
-                            className="text-[10px] text-[var(--color-gold)] hover:text-white font-bold tracking-wide uppercase transition-colors flex items-center gap-1.5"
-                          >
-                            <Eye className="h-3.5 w-3.5" /> View Cinematic Profile
-                          </Link>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" className="h-7 text-[10px] border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white">
-                              Already Seen
-                            </Button>
-                            <Button size="sm" className="h-7 text-[10px] bg-[var(--color-gold)] hover:bg-[#b5952f] text-black">
-                              Save Match
-                            </Button>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                  {results.map((movie, idx) => (
+                    <MovieCard key={movie.id} movie={movie} idx={idx} />
+                  ))}
+                </div>
               </div>
 
               {/* Reset Search Button */}
@@ -549,9 +491,9 @@ export function AiResultsPage() {
               className="text-center py-16 max-w-md mx-auto"
             >
               <Brain className="h-10 w-10 text-[var(--color-gold)] mx-auto mb-3 opacity-50" />
-              <h3 className="text-lg font-serif font-bold text-white mb-1.5">No semantic matches found</h3>
+              <h3 className="text-lg font-serif font-bold text-white mb-1.5">No recommendations found</h3>
               <p className="text-xs text-[var(--color-text-secondary)] mb-5">
-                We couldn't analyze the query confidently. Try describing a simpler idea or a favorite movie name.
+                We couldn't find any recommendations matching your criteria. Try adjusting your query or describing a different movie style.
               </p>
               <Button 
                 onClick={() => {

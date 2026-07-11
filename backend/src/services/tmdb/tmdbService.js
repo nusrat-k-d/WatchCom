@@ -24,13 +24,14 @@ const fetchFromTMDB = async (endpoint, params = {}) => {
   }
 
   try {
+    console.log("TMDb URL:", url.toString());
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
       }
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const status = response.status;
@@ -42,9 +43,12 @@ const fetchFromTMDB = async (endpoint, params = {}) => {
 
     return await response.json();
   } catch (error) {
+    console.error("Original Fetch Error:", error);
+
     if (error.status) throw error;
-    const err = new Error(error.message || 'Error communicating with TMDb API');
-    err.status = 502; // Bad Gateway
+
+    const err = new Error(error.message || "Error communicating with TMDb API");
+    err.status = 502;
     throw err;
   }
 };
@@ -141,4 +145,16 @@ export const getGenres = async (language = 'en-US') => {
  */
 export const discoverMoviesByGenres = async (genreIds, page = 1) => {
   return fetchFromTMDB('/discover/movie', { with_genres: genreIds, page });
+};
+
+/**
+ * Get videos for a specific movie by TMDb ID
+ */
+export const getMovieVideos = async (movieId) => {
+  if (!movieId) {
+    const error = new Error('Movie ID is required');
+    error.status = 400;
+    throw error;
+  }
+  return fetchFromTMDB(`/movie/${movieId}/videos`);
 };
