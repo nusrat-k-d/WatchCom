@@ -35,10 +35,10 @@ export function CastCarousel({ cast, director }: CastCarouselProps) {
         </h2>
       </div>
 
-      <div className="relative overflow-hidden w-full group">
+      <div className="relative overflow-hidden w-full group/cast-carousel">
         {/* Soft edge blur overlays */}
-        <div className="absolute top-0 left-0 bottom-0 w-12 bg-gradient-to-r from-[#050505] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute top-0 right-0 bottom-0 w-12 bg-gradient-to-l from-[#050505] to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute top-0 left-0 bottom-0 w-12 bg-gradient-to-r from-[#050505] to-transparent z-10 pointer-events-none opacity-0 group-hover/cast-carousel:opacity-100 transition-opacity duration-300" />
+        <div className="absolute top-0 right-0 bottom-0 w-12 bg-gradient-to-l from-[#050505] to-transparent z-10 pointer-events-none opacity-0 group-hover/cast-carousel:opacity-100 transition-opacity duration-300" />
         
         <div className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1 snap-x select-none">
           
