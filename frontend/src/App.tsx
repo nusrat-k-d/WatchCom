@@ -1,21 +1,14 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { MainLayout } from "./components/layout/MainLayout"
-import { AuthProvider } from "./context/AuthContext"
 import { UserTasteProvider } from "./context/UserTasteContext"
 
 // Lazy loaded page components
 const LandingPage = lazy(() => import("./pages/LandingPage").then(m => ({ default: m.LandingPage })))
-const LoginPage = lazy(() => import("./pages/auth/LoginPage").then(m => ({ default: m.LoginPage })))
-const RegisterPage = lazy(() => import("./pages/auth/RegisterPage").then(m => ({ default: m.RegisterPage })))
-const OnboardingPage = lazy(() => import("./pages/OnboardingPage").then(m => ({ default: m.OnboardingPage })))
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then(m => ({ default: m.DashboardPage })))
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage").then(m => ({ default: m.DiscoverPage })))
 const MovieDetailsPage = lazy(() => import("./pages/MovieDetailsPage").then(m => ({ default: m.MovieDetailsPage })))
 const RecommendationsPage = lazy(() => import("./pages/RecommendationsPage").then(m => ({ default: m.RecommendationsPage })))
-const WatchlistPage = lazy(() => import("./pages/WatchlistPage").then(m => ({ default: m.WatchlistPage })))
-const ProfilePage = lazy(() => import("./pages/ProfilePage").then(m => ({ default: m.ProfilePage })))
-const TasteDnaPage = lazy(() => import("./pages/TasteDnaPage").then(m => ({ default: m.TasteDnaPage })))
 const AiResultsPage = lazy(() => import("./pages/AiResultsPage").then(m => ({ default: m.AiResultsPage })))
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(m => ({ default: m.NotFoundPage })))
 
@@ -38,31 +31,23 @@ function PageSkeleton() {
 
 function App() {
   return (
-    <AuthProvider>
-      <UserTasteProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageSkeleton />}>
-            <Routes>
-              <Route element={<MainLayout />}>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/onboarding" element={<OnboardingPage />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/discover" element={<DiscoverPage />} />
-                <Route path="/ai-results" element={<AiResultsPage />} />
-                <Route path="/movie/:id" element={<MovieDetailsPage />} />
-                <Route path="/recommendations" element={<RecommendationsPage />} />
-                <Route path="/rate-queue" element={<WatchlistPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/taste-dna" element={<TasteDnaPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </UserTasteProvider>
-    </AuthProvider>
+    <UserTasteProvider>
+      <BrowserRouter>
+        <Suspense fallback={<PageSkeleton />}>
+          <Routes>
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/discover" element={<DiscoverPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/ai-results" element={<AiResultsPage />} />
+              <Route path="/movie/:id" element={<MovieDetailsPage />} />
+              <Route path="/recommendations" element={<RecommendationsPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </UserTasteProvider>
   )
 }
 

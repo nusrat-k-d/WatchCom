@@ -48,7 +48,7 @@ export function DashboardPage() {
               transition={{ duration: 0.6 }}
               className="text-sm font-bold uppercase tracking-widest text-[var(--color-gold)] mb-2"
             >
-              Good Evening, User
+              AI Curated Cinema
             </motion.h1>
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
