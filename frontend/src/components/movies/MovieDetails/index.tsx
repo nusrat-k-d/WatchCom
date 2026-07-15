@@ -1,16 +1,11 @@
 import { motion } from "framer-motion"
-import { AlertCircle, RotateCcw, Compass, Quote } from "lucide-react"
+import { AlertCircle, RotateCcw, Compass } from "lucide-react"
 import { Button } from "../../ui/button"
 
 import { HeroSection } from "./HeroSection"
 import { AISection } from "./AISection"
-import { CinematicProfile } from "./CinematicProfile"
 import { CastCarousel } from "./CastCarousel"
 import { SimilarMoviesCarousel } from "./SimilarMoviesCarousel"
-import { MoodTags } from "./MoodTags"
-import { ReasonsToWatch } from "./ReasonsToWatch"
-import { DiscussionQuestions } from "./DiscussionQuestions"
-import { WatchComVerdict } from "./WatchComVerdict"
 import { LoadingSkeleton } from "./LoadingSkeleton"
 
 import type { AICinematicData } from "../../../lib/ai-profile"
@@ -86,7 +81,7 @@ export function MovieDetailsView({
         <motion.div 
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className="max-w-md w-full bg-[#0b0b0c]/90 backdrop-blur-2xl border border-white/5 p-10 md:p-12 rounded-[2.5rem] shadow-[0_30px_70px_rgba(0,0,0,0.9)] flex flex-col items-center z-10"
         >
           <div className="h-16 w-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-500 mb-8 animate-pulse">
@@ -125,7 +120,7 @@ export function MovieDetailsView({
       
       {/* 1. Subtle Film Grain overlay */}
       <div 
-        className="absolute inset-0 pointer-events-none z-10 opacity-[0.012] pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-10 opacity-[0.012]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
         }}
@@ -139,60 +134,16 @@ export function MovieDetailsView({
         trailerUrl={trailerUrl} 
       />
 
-      {/* 3. Luxury Space Editorial Grid Layout */}
-      <div className="container mx-auto px-4 md:px-8 mt-16 space-y-20 max-w-6xl relative z-20">
+      {/* 3. Luxury Space Editorial Container */}
+      <div className="container mx-auto px-4 md:px-8 mt-16 space-y-16 max-w-5xl relative z-20">
         
-        {/* Sections 1, 2, 3: AI Details */}
+        {/* Sections: AI Summary, Why Recommended, AI Review */}
         <AISection aiData={aiData} />
 
-        {/* Section 4: Circular Metrics Indicators */}
-        <CinematicProfile metrics={aiData.metrics} />
-
-        {/* Section 5: Reasons to Watch Card Grid */}
-        <ReasonsToWatch reasons={aiData.reasonsToWatch} />
-
-        {/* Section 6: Tone & Mood Tags */}
-        <MoodTags moodTags={aiData.moodTags} />
-
-        {/* Section 7: Cast Swipe Carousel */}
+        {/* Section: Cast Swipe Carousel */}
         <CastCarousel cast={cast} director={director} />
 
-        {/* Section 11: Memorable Original Quote */}
-        {aiData.memorableQuote && (
-          <motion.section
-            initial={{ opacity: 0, y: 25 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="py-16 text-center max-w-4xl mx-auto border-t border-white/5 w-full"
-            aria-labelledby="quote-heading"
-          >
-            <div className="space-y-6 relative px-8">
-              {/* Decorative Quote mark */}
-              <Quote className="h-16 w-16 text-[#C9A227]/10 mx-auto fill-[#C9A227]/5 stroke-none" />
-              
-              <blockquote id="quote-heading" className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light leading-relaxed text-gray-200 italic tracking-wide">
-                "{aiData.memorableQuote.text}"
-              </blockquote>
-              
-              <cite className="block text-xs uppercase tracking-widest text-[#C9A227] font-bold font-mono not-italic mt-5">
-                — {aiData.memorableQuote.by}
-              </cite>
-            </div>
-          </motion.section>
-        )}
-
-        {/* Section 12: Premium WatchCom Verdict gradient callout */}
-        <WatchComVerdict 
-          metrics={aiData.metrics} 
-          title={movieDetails.title} 
-          voteAverage={movieDetails.vote_average || 0} 
-        />
-
-        {/* Section 10: Discussion Questions */}
-        <DiscussionQuestions questions={aiData.discussionQuestions} />
-
-        {/* Section 9: Similar Movie Snapping Recommendations */}
+        {/* Section: Similar Movie Recommendations */}
         <SimilarMoviesCarousel similarMovies={similarMovies} />
 
       </div>

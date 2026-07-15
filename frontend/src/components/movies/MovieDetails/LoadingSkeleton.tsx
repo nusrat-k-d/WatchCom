@@ -46,19 +46,6 @@ export function LoadingSkeleton() {
           </div>
         </div>
 
-        {/* Cinematic DNA Profile Shimmers */}
-        <div className="space-y-6">
-          <div className="h-4 bg-zinc-900 rounded w-1/12 animate-pulse" />
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="bg-zinc-950/40 border border-zinc-900 p-6 rounded-3xl flex flex-col items-center justify-center space-y-4 animate-pulse">
-                <div className="h-16 w-16 bg-zinc-900 rounded-full" />
-                <div className="h-3 bg-zinc-900 rounded w-3/4" />
-              </div>
-            ))}
-          </div>
-        </div>
-
       </div>
     </div>
   )

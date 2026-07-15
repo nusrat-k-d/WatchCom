@@ -84,12 +84,12 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
         <LazyImage 
           src={backdropUrl} 
           alt={`${movieDetails.title} Backdrop`} 
-          className="w-full h-full object-cover object-top opacity-30 scale-[1.03]"
+          className="w-full h-full object-cover object-top opacity-55 scale-[1.03]"
         />
         {/* Subtle Vignette & Dark Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/75 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/40 to-transparent z-10" />
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] z-0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/50 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/20 to-transparent z-10" />
+        <div className="absolute inset-0 bg-black/5 backdrop-blur-[0.5px] z-0" />
       </div>
 
       <div className="container mx-auto px-4 md:px-8 relative z-20 w-full">
