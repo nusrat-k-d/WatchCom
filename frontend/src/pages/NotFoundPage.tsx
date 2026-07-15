@@ -13,8 +13,8 @@ export function NotFoundPage() {
       <p className="text-[var(--color-text-secondary)] mb-8 max-w-md text-lg">
         The cinematic coordinates you entered don't exist in our database. Let's get you back to calibrated space.
       </p>
-      <Link to="/discover">
-        <Button size="lg" className="bg-[var(--color-gold)] hover:bg-[#b5952f] text-black font-bold">
+      <Link to="/discover" className="focus-visible:outline-none">
+        <Button size="lg" className="bg-gradient-to-r from-[var(--color-gold)] to-[#b5952f] hover:from-[#e3bd3f] hover:to-[#c4a233] text-black font-bold px-8 py-4 rounded-xl transition-all shadow-lg hover:scale-[1.02] cursor-pointer border border-[#C9A227]/40">
           <Compass className="mr-2 h-5 w-5" /> Return to Discover
         </Button>
       </Link>
