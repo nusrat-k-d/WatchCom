@@ -124,10 +124,10 @@ export function AiResultsPage() {
 
   const loadingStages = [
     "Understanding your request...",
-    "Detecting intent...",
-    "Searching movie knowledge...",
-    "Ranking best matches...",
-    "Preparing explanations..."
+    "Analyzing movie intent...",
+    "Searching thousands of movies...",
+    "Ranking recommendations...",
+    "Preparing your perfect watch..."
   ]
 
 
@@ -676,21 +676,42 @@ export function AiResultsPage() {
           ) : (
             <motion.div 
               key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16 max-w-md mx-auto"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16 max-w-md mx-auto flex flex-col items-center"
             >
-              <Brain className="h-10 w-10 text-[var(--color-gold)] mx-auto mb-3 opacity-50" />
-              <h3 className="text-lg font-serif font-bold text-white mb-1.5">No recommendations found</h3>
-              <p className="text-xs text-[var(--color-text-secondary)] mb-5">
-                We couldn't find any recommendations matching your criteria. Try adjusting your query or describing a different movie style.
+              {/* Premium illustration / indicator */}
+              <div className="h-16 w-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-500 mb-6 animate-pulse">
+                <Brain className="h-8 w-8 text-[var(--color-gold)] opacity-70" />
+              </div>
+              
+              <h3 className="text-xl font-serif font-bold text-white mb-3 uppercase tracking-wide">No recommendations found</h3>
+              
+              <p className="text-sm text-gray-400 mb-8 leading-relaxed font-light">
+                We couldn't find a perfect match. Try describing the feeling you're looking for instead.
               </p>
+              
+              <div className="flex flex-wrap justify-center gap-2 mb-8">
+                {["Emotional", "Sci-Fi", "Mind-Bending", "Hidden Gems"].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => {
+                      setSearchInput(suggestion)
+                      setSearchParams({ q: suggestion })
+                    }}
+                    className="px-4 py-2 rounded-full text-xs font-semibold bg-[#111112] border border-white/5 text-gray-300 hover:text-[var(--color-gold)] hover:border-[var(--color-gold)]/30 hover:bg-[#161618] active:scale-95 transition-all duration-300 cursor-pointer shadow-md"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+
               <Button 
                 onClick={() => {
                   setSearchParams({})
                   setSearchInput("")
                 }}
-                className="bg-[var(--color-gold)] hover:bg-[#b5952f] text-black"
+                className="bg-gradient-to-r from-[var(--color-gold)] to-[#b5952f] hover:from-[#e3bd3f] hover:to-[#c4a233] text-black font-bold px-8 py-3 rounded-xl transition-all shadow-lg hover:scale-102 cursor-pointer border border-[#C9A227]/40"
               >
                 Clear Search
               </Button>
