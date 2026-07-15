@@ -110,6 +110,7 @@ export function AiResultsPage() {
   const [intent, setIntent] = useState<ExtractedIntent | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isFocused, setIsFocused] = useState(false)
+  const [retryTrigger, setRetryTrigger] = useState(0)
 
   const debouncedSearchInput = useDebounce(searchInput, 300)
 
@@ -368,12 +369,19 @@ export function AiResultsPage() {
     return () => {
       clearInterval(interval)
     }
-  }, [query])
+  }, [query, retryTrigger])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchInput.trim()) {
-      setSearchParams({ q: searchInput.trim() })
+    const trimmedInput = searchInput.trim()
+    if (trimmedInput) {
+      if (trimmedInput === query) {
+        // Force retry of same query by clearing cache and triggering refetch
+        searchResultsCache.delete(trimmedInput)
+        setRetryTrigger(prev => prev + 1)
+      } else {
+        setSearchParams({ q: trimmedInput })
+      }
     }
   }
 
@@ -552,7 +560,8 @@ export function AiResultsPage() {
               </p>
               <Button 
                 onClick={() => {
-                  setSearchParams({ q: query })
+                  searchResultsCache.delete(query)
+                  setRetryTrigger(prev => prev + 1)
                 }}
                 className="bg-[var(--color-gold)] hover:bg-[#b5952f] text-black"
               >
