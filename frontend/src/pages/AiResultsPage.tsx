@@ -159,6 +159,13 @@ export function AiResultsPage() {
       setResults(cached.results)
       setIntent(cached.intent)
       setIsLoading(false)
+
+      const scrollY = sessionStorage.getItem("watchcom_last_scroll_y")
+      if (scrollY) {
+        setTimeout(() => {
+          window.scrollTo(0, parseInt(scrollY, 10))
+        }, 150)
+      }
       return
     }
 
