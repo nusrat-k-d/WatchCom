@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Star, Loader2 } from "lucide-react"
+import { Star } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Progress } from "../components/ui/progress"
 import { MOCK_MOVIES, GENRES } from "../lib/mock-data"
@@ -140,11 +140,36 @@ export function OnboardingPage() {
         {step === 3 && (
           <motion.div
             key="step3"
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center justify-center min-h-[50vh] text-center"
           >
-            <Loader2 className="h-16 w-16 text-[var(--color-gold)] animate-spin mb-8" />
+            {/* Custom Premium Gold Skeleton Loader Card */}
+            <div className="w-full max-w-md bg-[#0b0b0c] border border-[var(--color-gold)]/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden mb-8 animate-pulse">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.03),transparent_70%)] pointer-events-none" />
+              
+              <div className="flex items-center gap-4 mb-6">
+                <div className="h-12 w-12 bg-white/5 border border-white/5 rounded-2xl shrink-0 flex items-center justify-center">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-gold)] animate-ping" />
+                </div>
+                <div className="flex-1 space-y-2 text-left">
+                  <div className="h-4 bg-white/5 rounded w-3/4" />
+                  <div className="h-3 bg-white/5 rounded w-1/2" />
+                </div>
+              </div>
+              
+              <div className="space-y-3 pt-4 border-t border-white/5">
+                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-[var(--color-gold)]"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 4, ease: "easeInOut" }}
+                  />
+                </div>
+              </div>
+            </div>
+
             <h2 className="text-3xl font-serif font-bold mb-4">Training Your Recommendation Profile</h2>
             
             <div className="h-8 overflow-hidden">
@@ -153,11 +178,11 @@ export function OnboardingPage() {
                 transition={{ duration: 4, times: [0, 0.25, 0.5, 0.75, 1] }}
                 className="flex flex-col text-lg"
               >
-                <span className="h-8 text-[var(--color-gold)]">Analyzing Preferences...</span>
-                <span className="h-8 text-[var(--color-gold)]">Building Taste Vector...</span>
-                <span className="h-8 text-[var(--color-gold)]">Finding Similar Viewers...</span>
-                <span className="h-8 text-[var(--color-gold)]">Calculating Match Scores...</span>
-                <span className="h-8 text-[var(--color-gold)]">Generating Recommendations...</span>
+                <span className="h-8 text-[var(--color-gold)] font-medium">Analyzing Preferences...</span>
+                <span className="h-8 text-[var(--color-gold)] font-medium">Building Taste Vector...</span>
+                <span className="h-8 text-[var(--color-gold)] font-medium">Finding Similar Viewers...</span>
+                <span className="h-8 text-[var(--color-gold)] font-medium">Calculating Match Scores...</span>
+                <span className="h-8 text-[var(--color-gold)] font-medium">Generating Recommendations...</span>
               </motion.div>
             </div>
           </motion.div>

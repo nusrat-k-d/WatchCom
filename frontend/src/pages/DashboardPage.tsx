@@ -1,23 +1,37 @@
+import React, { useMemo, lazy, Suspense } from "react"
 import { motion } from "framer-motion"
 import { ChevronRight, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { MOCK_MOVIES } from "../lib/mock-data"
-import { ProfileCompletion } from "../components/profile/ProfileCompletion"
-import { EngineStatus } from "../components/engine/EngineStatus"
 import { MovieCard } from "../components/movies/MovieCard"
+import { LazyImage } from "../components/ui/LazyImage"
+
+// Lazy loaded large dashboard components
+const ProfileCompletion = lazy(() => import("../components/profile/ProfileCompletion").then(m => ({ default: m.ProfileCompletion })))
+const EngineStatus = lazy(() => import("../components/engine/EngineStatus").then(m => ({ default: m.EngineStatus })))
+
+// Skeleton fallback for dashboard modules
+function CardSkeleton() {
+  return (
+    <div className="h-64 w-full bg-[#0f0f0f] border border-white/5 rounded-2xl animate-pulse" />
+  )
+}
 
 export function DashboardPage() {
   const heroMovie = MOCK_MOVIES[0]
-  const recommendedMovies = MOCK_MOVIES.slice(1, 6)
-  const trendingMovies = MOCK_MOVIES.slice(5, 10)
+  
+  // Memoize movie slices to prevent new references on every render
+  const recommendedMovies = useMemo(() => MOCK_MOVIES.slice(1, 6), [])
+  const trendingMovies = useMemo(() => MOCK_MOVIES.slice(5, 10), [])
+  const hiddenGems = useMemo(() => [...MOCK_MOVIES].reverse(), [])
 
   return (
     <div className="flex flex-col pb-24">
       {/* Hero Section */}
       <section className="relative h-[70vh] flex items-end pb-12">
         <div className="absolute inset-0 z-0">
-          <img 
+          <LazyImage 
             src={heroMovie.posterUrl} 
             alt={heroMovie.title} 
             className="w-full h-full object-cover opacity-60"
@@ -80,23 +94,31 @@ export function DashboardPage() {
 
       {/* Intelligence Dashboard */}
       <section className="container mx-auto px-4 -mt-12 relative z-20 mb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ProfileCompletion />
-          <EngineStatus />
-        </div>
+        <Suspense fallback={
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        }>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ProfileCompletion />
+            <EngineStatus />
+          </div>
+        </Suspense>
       </section>
 
       {/* Movie Rows */}
       <section className="container mx-auto px-4 space-y-12">
         <MovieRow title="Recommended For You" movies={recommendedMovies} />
         <MovieRow title="Because You Liked Interstellar" movies={trendingMovies} />
-        <MovieRow title="Hidden Gems" movies={[...MOCK_MOVIES].reverse()} />
+        <MovieRow title="Hidden Gems" movies={hiddenGems} />
       </section>
     </div>
   )
 }
 
-function MovieRow({ title, movies }: { title: string, movies: typeof MOCK_MOVIES }) {
+// Memoized MovieRow to avoid parent re-render side-effects
+const MovieRow = React.memo(function MovieRow({ title, movies }: { title: string, movies: typeof MOCK_MOVIES }) {
   return (
     <div className="flex flex-col gap-6 mb-8">
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
@@ -105,11 +127,11 @@ function MovieRow({ title, movies }: { title: string, movies: typeof MOCK_MOVIES
           Explore Selection <ChevronRight className="h-4 w-4 ml-1" />
         </Link>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
         {movies.map((movie, idx) => (
           <MovieCard key={movie.id} movie={movie} idx={idx} />
         ))}
       </div>
     </div>
   )
-}
+})

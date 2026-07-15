@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { BookmarkMinus } from "lucide-react"
 import { Button } from "../components/ui/button"
@@ -5,7 +6,7 @@ import { MOCK_MOVIES } from "../lib/mock-data"
 import { MovieCard } from "../components/movies/MovieCard"
 
 export function WatchlistPage() {
-  const watchlist = MOCK_MOVIES.slice(0, 4)
+  const watchlist = useMemo(() => MOCK_MOVIES.slice(0, 4), [])
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-4rem)]">

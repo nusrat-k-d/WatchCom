@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence, useInView } from "framer-motion"
 import { 
@@ -10,6 +10,7 @@ import { MovieCard } from "../components/movies/MovieCard"
 import { useTaste } from "../context/UserTasteContext"
 import { getAICinematicData } from "../lib/ai-profile"
 import type { Movie } from "../lib/mock-data"
+import { LazyImage } from "../components/ui/LazyImage"
 
 interface Genre {
   id: number
@@ -40,7 +41,7 @@ interface CastMember {
 }
 
 // Circular Progress Component for Cinematic Metrics
-function CircularProgress({ value, label }: { value: number; label: string }) {
+const CircularProgress = React.memo(function CircularProgress({ value, label }: { value: number; label: string }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-50px" })
   const [currentVal, setCurrentVal] = useState(0)
@@ -106,7 +107,7 @@ function CircularProgress({ value, label }: { value: number; label: string }) {
       </span>
     </div>
   )
-}
+})
 
 // Shimmer Skeleton Loader for Movie Details
 function MovieDetailsSkeleton() {
@@ -157,6 +158,15 @@ function MovieDetailsSkeleton() {
   )
 }
 
+// Global in-memory cache for visited movie details
+const movieDetailsCache = new Map<string, {
+  details: MovieDetails
+  cast: CastMember[]
+  director: string
+  similar: Movie[]
+  trailerUrl: string | null
+}>()
+
 export function MovieDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -198,6 +208,20 @@ export function MovieDetailsPage() {
     if (!id) return
 
     const fetchAllDetails = async () => {
+      // Check cache first
+      if (movieDetailsCache.has(id)) {
+        const cached = movieDetailsCache.get(id)!
+        setMovieDetails(cached.details)
+        setCast(cached.cast)
+        setDirector(cached.director)
+        setSimilarMovies(cached.similar)
+        setTrailerUrl(cached.trailerUrl)
+        setIsLoading(false)
+        setError(null)
+        window.scrollTo(0, 0)
+        return
+      }
+
       setIsLoading(true)
       setError(null)
       try {
@@ -214,17 +238,24 @@ export function MovieDetailsPage() {
         const detailsData = await detailsRes.json()
         setMovieDetails(detailsData)
 
+        let resolvedCast: CastMember[] = []
+        let resolvedDirector = "Unknown"
         if (castRes.ok) {
           const castData = await castRes.json()
-          setCast(castData.cast || [])
+          resolvedCast = castData.cast || []
+          setCast(resolvedCast)
           const dir = castData.crew?.find((c: { job: string; name: string }) => c.job === "Director")?.name
-          if (dir) setDirector(dir)
+          if (dir) {
+            resolvedDirector = dir
+            setDirector(dir)
+          }
         }
 
+        let resolvedSimilar: Movie[] = []
         if (similarRes.ok) {
           const similarData = await similarRes.json()
           const resultsList = similarData.results || []
-          const mappedSimilar: Movie[] = resultsList.slice(0, 10).map((m: { id: number; title?: string; release_date?: string; overview?: string; poster_path?: string; vote_average?: number }) => {
+          resolvedSimilar = resultsList.slice(0, 10).map((m: { id: number; title?: string; release_date?: string; overview?: string; poster_path?: string; vote_average?: number }) => {
             const releaseYear = m.release_date ? parseInt(m.release_date.split('-')[0], 10) : 0
             return {
               id: String(m.id),
@@ -239,9 +270,10 @@ export function MovieDetailsPage() {
               rating: m.vote_average ? Number((m.vote_average / 2).toFixed(1)) : 0
             }
           })
-          setSimilarMovies(mappedSimilar)
+          setSimilarMovies(resolvedSimilar)
         }
 
+        let resolvedTrailer: string | null = null
         if (videosRes.ok) {
           const videosData = await videosRes.json()
           const videos = videosData.results || []
@@ -250,11 +282,21 @@ export function MovieDetailsPage() {
           ) || videos.find((v: { site: string; key: string }) => v.site === "YouTube")
           
           if (trailer) {
-            setTrailerUrl(`https://www.youtube.com/watch?v=${trailer.key}`)
+            resolvedTrailer = `https://www.youtube.com/watch?v=${trailer.key}`
+            setTrailerUrl(resolvedTrailer)
           } else {
             setTrailerUrl(null)
           }
         }
+
+        // Save to cache
+        movieDetailsCache.set(id, {
+          details: detailsData,
+          cast: resolvedCast,
+          director: resolvedDirector,
+          similar: resolvedSimilar,
+          trailerUrl: resolvedTrailer
+        })
       } catch (err: unknown) {
         console.error(err)
         const errMsg = err instanceof Error ? err.message : "Failed to load movie. Please check your connection and try again."
@@ -346,14 +388,14 @@ export function MovieDetailsPage() {
       {/* ============================================================================ */}
       {/* 1. CINEMATIC HERO SECTION */}
       {/* ============================================================================ */}
-      <section className="relative h-[80vh] flex items-end pb-12 overflow-hidden border-b border-white/5">
+      <section className="relative min-h-[75vh] md:h-[80vh] flex items-end pt-24 pb-12 overflow-hidden border-b border-white/5">
         
         {/* Parallax Backdrop */}
         <div 
           className="absolute inset-0 z-0 transition-transform duration-100 ease-out"
           style={{ transform: `translateY(${scrollY * 0.4}px)` }}
         >
-          <img 
+          <LazyImage 
             src={backdropUrl} 
             alt={`${movieDetails.title} backdrop`} 
             className="w-full h-full object-cover object-top opacity-35 scale-[1.05]"
@@ -380,7 +422,7 @@ export function MovieDetailsPage() {
               style={{ transformStyle: "preserve-3d", perspective: 1000 }}
               className="w-40 md:w-56 shrink-0 rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0b0b0c] relative group cursor-pointer"
             >
-              <img src={posterUrl} alt={movieDetails.title} className="w-full h-auto object-cover" />
+              <LazyImage src={posterUrl} alt={movieDetails.title} className="w-full h-auto object-cover" />
             </motion.div>
             
             {/* Details overlay metadata */}
@@ -616,10 +658,9 @@ export function MovieDetailsPage() {
                   {cast.slice(0, 10).map((actor) => (
                     <div key={actor.id} className="flex flex-col items-center text-center shrink-0 w-24 snap-start group">
                       <div className="w-16 h-16 rounded-full overflow-hidden border border-white/10 mb-2.5 group-hover:border-[#C9A227]/40 transition-colors shadow-lg">
-                        <img 
+                        <LazyImage 
                           src={actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'} 
                           alt={actor.name} 
-                          loading="lazy"
                           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                         />
                       </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 import { MOCK_MOVIES } from "../lib/mock-data"
 
 type Rating = {
@@ -46,65 +46,69 @@ export function UserTasteProvider({ children }: { children: React.ReactNode }) {
     ])
   }, [])
 
-  const rateMovie = (movieId: string, score: number) => {
+  const rateMovie = useCallback((movieId: string, score: number) => {
     setRatings(prev => {
       const existing = prev.filter(r => r.movieId !== movieId)
       return [...existing, { movieId, score, date: new Date().toISOString() }]
     })
-  }
+  }, [])
 
-  const dismissMovie = (movieId: string, reason: "not_interested" | "already_seen") => {
+  const dismissMovie = useCallback((movieId: string, reason: "not_interested" | "already_seen") => {
     setDismissals(prev => {
       if (prev.some(d => d.movieId === movieId)) return prev
       return [...prev, { movieId, reason, date: new Date().toISOString() }]
     })
-  }
+  }, [])
 
-  const getRatingForMovie = (movieId: string) => {
+  const getRatingForMovie = useCallback((movieId: string) => {
     return ratings.find(r => r.movieId === movieId)?.score || null
-  }
+  }, [ratings])
 
-  const isDismissed = (movieId: string) => {
+  const isDismissed = useCallback((movieId: string) => {
     return dismissals.some(d => d.movieId === movieId)
-  }
+  }, [dismissals])
 
   // Calculate dynamic metrics
-  const totalRated = ratings.length
-  
-  // Calculate profile strength based on number of ratings (cap at 100%)
-  const profileStrength = Math.min(100, Math.round((totalRated / 20) * 100))
-  
-  const averageRating = totalRated > 0 
-    ? Number((ratings.reduce((acc, r) => acc + r.score, 0) / totalRated).toFixed(1)) 
-    : 0
+  const metrics = useMemo(() => {
+    const totalRated = ratings.length
+    
+    // Calculate profile strength based on number of ratings (cap at 100%)
+    const profileStrength = Math.min(100, Math.round((totalRated / 20) * 100))
+    
+    const averageRating = totalRated > 0 
+      ? Number((ratings.reduce((acc, r) => acc + r.score, 0) / totalRated).toFixed(1)) 
+      : 0
 
-  // Calculate unique decades and genres from rated movies
-  const ratedMoviesData = ratings.map(r => MOCK_MOVIES.find(m => m.id === r.movieId)).filter(Boolean)
-  const ratedDecadesCount = new Set(ratedMoviesData.map(m => m?.decade)).size
-  const ratedGenresCount = new Set(ratedMoviesData.flatMap(m => m?.genres)).size
+    // Calculate unique decades and genres from rated movies
+    const ratedMoviesData = ratings.map(r => MOCK_MOVIES.find(m => m.id === r.movieId)).filter(Boolean)
+    const ratedDecadesCount = new Set(ratedMoviesData.map(m => m?.decade)).size
+    const ratedGenresCount = new Set(ratedMoviesData.flatMap(m => m?.genres)).size
 
-  // Confidence is a function of profile strength and diversity
-  const confidence = Math.min(100, profileStrength + (ratedGenresCount * 2))
+    // Confidence is a function of profile strength and diversity
+    const confidence = Math.min(100, profileStrength + (ratedGenresCount * 2))
 
-  const metrics = {
-    totalRated,
-    profileStrength: profileStrength < 10 ? 12 : profileStrength, // Floor at 12% for UI
-    averageRating,
-    confidence: confidence < 15 ? 15 : confidence, // Floor at 15% for UI
-    ratedDecadesCount,
-    ratedGenresCount
-  }
+    return {
+      totalRated,
+      profileStrength: profileStrength < 10 ? 12 : profileStrength, // Floor at 12% for UI
+      averageRating,
+      confidence: confidence < 15 ? 15 : confidence, // Floor at 15% for UI
+      ratedDecadesCount,
+      ratedGenresCount
+    }
+  }, [ratings])
+
+  const value = useMemo(() => ({
+    ratings,
+    dismissals,
+    rateMovie,
+    dismissMovie,
+    getRatingForMovie,
+    isDismissed,
+    metrics
+  }), [ratings, dismissals, rateMovie, dismissMovie, getRatingForMovie, isDismissed, metrics])
 
   return (
-    <UserTasteContext.Provider value={{
-      ratings,
-      dismissals,
-      rateMovie,
-      dismissMovie,
-      getRatingForMovie,
-      isDismissed,
-      metrics
-    }}>
+    <UserTasteContext.Provider value={value}>
       {children}
     </UserTasteContext.Provider>
   )
@@ -115,5 +119,5 @@ export function useTaste() {
   if (context === undefined) {
     throw new Error("useTaste must be used within a UserTasteProvider")
   }
-  return context
+  return context;
 }

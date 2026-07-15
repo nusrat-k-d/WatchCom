@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { MOCK_MOVIES } from "../lib/mock-data"
 import { useAuth } from "../context/AuthContext"
 import { ProfileCompletion } from "../components/profile/ProfileCompletion"
+import { LazyImage } from "../components/ui/LazyImage"
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -121,7 +122,7 @@ export function ProfilePage() {
                   <Card className="bg-[#0f0f0f] border-white/5 hover:border-white/20 transition-all">
                     <CardContent className="p-4 flex flex-col md:flex-row items-center gap-6">
                       <div className="h-24 w-16 shrink-0 rounded-md overflow-hidden shadow-lg border border-white/10">
-                        <img src={activity.movie.posterUrl} alt={activity.movie.title} className="w-full h-full object-cover" />
+                        <LazyImage src={activity.movie.posterUrl} alt={activity.movie.title} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 text-center md:text-left">
                         <h3 className="font-bold text-xl mb-1 hover:text-[var(--color-gold)] cursor-pointer">{activity.movie.title}</h3>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -11,11 +11,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  const login = useCallback(() => setIsAuthenticated(true), []);
+  const logout = useCallback(() => setIsAuthenticated(false), []);
+
+  const value = useMemo(() => ({
+    isAuthenticated,
+    login,
+    logout
+  }), [isAuthenticated, login, logout]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

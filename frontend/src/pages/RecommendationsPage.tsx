@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { MOCK_MOVIES } from "../lib/mock-data"
 import { useState } from "react"
 import { useTaste } from "../context/UserTasteContext"
+import { LazyImage } from "../components/ui/LazyImage"
 
 export function RecommendationsPage() {
   const { isDismissed, dismissMovie, metrics } = useTaste()
@@ -111,7 +112,7 @@ export function RecommendationsPage() {
             <div className="flex flex-col md:flex-row gap-6 md:gap-8 bg-[#0f0f0f] rounded-2xl border border-white/5 p-4 shadow-2xl">
               {/* Poster */}
               <Link to={`/movie/${movie.id}`} className="md:w-1/4 shrink-0 overflow-hidden rounded-xl border border-white/5">
-                <img src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover aspect-[2/3]" />
+                <LazyImage src={movie.posterUrl} alt={movie.title} className="w-full h-full object-cover aspect-[2/3]" />
               </Link>
               
               {/* Content */}
