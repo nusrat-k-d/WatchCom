@@ -4,11 +4,9 @@ import { MainLayout } from "./components/layout/MainLayout"
 import { UserTasteProvider } from "./context/UserTasteContext"
 
 // Lazy loaded page components
-const LandingPage = lazy(() => import("./pages/LandingPage").then(m => ({ default: m.LandingPage })))
-const DashboardPage = lazy(() => import("./pages/DashboardPage").then(m => ({ default: m.DashboardPage })))
+const TrendingPage = lazy(() => import("./pages/TrendingPage").then(m => ({ default: m.TrendingPage })))
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage").then(m => ({ default: m.DiscoverPage })))
 const MovieDetailsPage = lazy(() => import("./pages/MovieDetailsPage").then(m => ({ default: m.MovieDetailsPage })))
-const RecommendationsPage = lazy(() => import("./pages/RecommendationsPage").then(m => ({ default: m.RecommendationsPage })))
 const AiResultsPage = lazy(() => import("./pages/AiResultsPage").then(m => ({ default: m.AiResultsPage })))
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(m => ({ default: m.NotFoundPage })))
 
@@ -36,12 +34,11 @@ function App() {
         <Suspense fallback={<PageSkeleton />}>
           <Routes>
             <Route element={<MainLayout />}>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/" element={<DiscoverPage />} />
               <Route path="/discover" element={<DiscoverPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/trending" element={<TrendingPage />} />
               <Route path="/ai-results" element={<AiResultsPage />} />
               <Route path="/movie/:id" element={<MovieDetailsPage />} />
-              <Route path="/recommendations" element={<RecommendationsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

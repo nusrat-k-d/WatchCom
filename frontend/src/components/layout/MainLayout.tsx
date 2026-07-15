@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link, Outlet, useLocation } from "react-router-dom"
-import { Brain, Sparkles, Film, Compass, Menu, X } from "lucide-react"
+import { Brain, Menu, X } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 
 export function Navbar() {
@@ -18,9 +18,8 @@ export function Navbar() {
   }, [])
 
   const navLinks = [
-    { name: "AI Assistant", path: "/discover", icon: Sparkles },
-    { name: "Discover", path: "/dashboard", icon: Compass },
-    { name: "Trending", path: "/recommendations", icon: Film }
+    { name: "✨ AI Assistant", path: "/discover" },
+    { name: "🔥 Trending", path: "/trending" }
   ]
 
   const getDesktopClass = (path: string) => {
@@ -65,11 +64,8 @@ export function Navbar() {
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-4">
             {navLinks.map((link) => {
-              const Icon = link.icon
-              const isActive = currentPath === link.path
               return (
                 <Link key={link.path} to={link.path} className={getDesktopClass(link.path)}>
-                  <Icon className={`h-3.5 w-3.5 ${isActive ? "text-[#C9A227]" : "text-gray-400"}`} />
                   <span>{link.name}</span>
                 </Link>
               )
@@ -94,7 +90,6 @@ export function Navbar() {
           >
             <div className="flex flex-col py-6 px-5 space-y-5">
               {navLinks.map((link) => {
-                const Icon = link.icon
                 const isActive = currentPath === link.path
                 return (
                   <Link 
@@ -105,7 +100,6 @@ export function Navbar() {
                       isActive ? "text-[#C9A227]" : "text-gray-400"
                     }`}
                   >
-                    <Icon className="h-4.5 w-4.5" />
                     <span>{link.name.toUpperCase()}</span>
                   </Link>
                 )
