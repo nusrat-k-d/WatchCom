@@ -242,7 +242,8 @@ export function DiscoverPage() {
                       <button
                         key={suggestion}
                         type="button"
-                        onClick={() => {
+                        onMouseDown={(e) => {
+                          e.preventDefault() // Prevents input focus loss before transition
                           const queryText = `Tell me more about ${suggestion} and movies like it`
                           setSearchQuery(queryText)
                           saveSearchToHistory(queryText)

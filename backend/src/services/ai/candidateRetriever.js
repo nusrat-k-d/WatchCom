@@ -11,7 +11,13 @@ const GENRE_MAP = {
   'Animation': 16,
   'Fantasy': 14,
   'Crime': 80,
-  'Mystery': 9648
+  'Mystery': 9648,
+  'Family': 10751,
+  'Adventure': 12,
+  'Documentary': 99,
+  'History': 36,
+  'War': 10752,
+  'Western': 37
 };
 
 /**
@@ -20,11 +26,12 @@ const GENRE_MAP = {
  * Filters duplicates, filters by runtime, and limits to top 20 candidates.
  * 
  * @param {object} intent - The extracted user intent containing:
- *   referenceMovie, genres, mood, runtime, avoid, complexity
+ *   originalQuery, referenceMovie, genres, mood, runtime, avoid, complexity
  * @returns {Promise<object[]>} Array of clean movie objects
  */
 export const getCandidateMovies = async (intent) => {
   let rawCandidates = [];
+  const query = intent.originalQuery || '';
 
   // Step 1: Candidate Generation
   console.log("Reference Movie:", intent.referenceMovie || "None");
@@ -45,40 +52,62 @@ export const getCandidateMovies = async (intent) => {
       console.log("Similar Movies Count:", recommendationsResult.results?.length || 0);
       console.log("First 5 Similar Movie Titles:", (recommendationsResult.results || []).slice(0, 5).map(m => m.title));
       
-      rawCandidates = recommendationsResult.results || [];
+      // Combine the reference movie itself and its recommendations
+      rawCandidates = [refMovie, ...(recommendationsResult.results || [])];
     }
-  } else if (intent.genres && intent.genres.length > 0) {
-    console.log("Search Result: None (No reference movie, searching by genres)");
-    console.log("TMDb ID: None");
-    console.log("TMDb URL: None");
-    console.log("Similar Movies Count: 0");
-    console.log("First 5 Similar Movie Titles: []");
+  } else {
+    let searchCandidates = [];
+    const wordCount = query.trim().split(/\s+/).length;
 
-    // 1. Map genre names to TMDb IDs
+    // A. If the query is relatively short, try directly searching for it on TMDB
+    if (query && wordCount <= 5) {
+      try {
+        const searchResult = await tmdbService.searchMovies(query);
+        if (searchResult && searchResult.results && searchResult.results.length > 0) {
+          searchCandidates = searchResult.results;
+          // Also fetch recommendations for the top search result
+          const topMovie = searchCandidates[0];
+          const recommendations = await tmdbService.getMovieRecommendations(topMovie.id).catch(() => null);
+          if (recommendations && recommendations.results) {
+            searchCandidates = [...searchCandidates, ...recommendations.results];
+          }
+        }
+      } catch (err) {
+        console.error("Error doing movie query search:", err.message);
+      }
+    }
+
+    // B. Fetch candidates by genres (if genres are specified or mapped)
+    let genreCandidates = [];
     const genreIds = intent.genres
       .map(name => GENRE_MAP[name])
       .filter(id => id !== undefined);
 
     if (genreIds.length > 0) {
-      // 2. Search using Discover API
+      console.log("Searching by genres:", intent.genres);
       const genreIdsString = genreIds.join(',');
-      const discoverResult = await tmdbService.discoverMoviesByGenres(genreIdsString);
-      rawCandidates = discoverResult.results || [];
-    } else {
-      // Fallback if genres did not map to any IDs
-      const trendingResult = await tmdbService.getTrendingMovies('day');
-      rawCandidates = trendingResult.results || [];
+      try {
+        // Fetch pages 1 and 2 of discover results for a wider candidate selection
+        const discoverResult1 = await tmdbService.discoverMoviesByGenres(genreIdsString, 1);
+        const discoverResult2 = await tmdbService.discoverMoviesByGenres(genreIdsString, 2).catch(() => ({ results: [] }));
+        genreCandidates = [...(discoverResult1.results || []), ...(discoverResult2.results || [])];
+      } catch (err) {
+        console.error("Error discovering movies by genres:", err.message);
+      }
     }
-  } else {
-    console.log("Search Result: None (No reference movie or genres, fallback to trending)");
-    console.log("TMDb ID: None");
-    console.log("TMDb URL: None");
-    console.log("Similar Movies Count: 0");
-    console.log("First 5 Similar Movie Titles: []");
 
-    // 1. Fallback to trending movies
-    const trendingResult = await tmdbService.getTrendingMovies('day');
-    rawCandidates = trendingResult.results || [];
+    // C. Fetch trending movies as fallback and additional pool candidates
+    let trendingCandidates = [];
+    try {
+      const trendingResult1 = await tmdbService.getTrendingMovies('day', 1);
+      const trendingResult2 = await tmdbService.getTrendingMovies('day', 2).catch(() => ({ results: [] }));
+      trendingCandidates = [...(trendingResult1.results || []), ...(trendingResult2.results || [])];
+    } catch (err) {
+      console.error("Error fetching trending movies:", err.message);
+    }
+
+    // Combine candidate pools
+    rawCandidates = [...searchCandidates, ...genreCandidates, ...trendingCandidates];
   }
 
   // Step 2: Remove Duplicates (using movie ID)

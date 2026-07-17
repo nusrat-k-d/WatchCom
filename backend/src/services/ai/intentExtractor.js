@@ -70,12 +70,30 @@ const normalizeQuery = (query) => {
  */
 const extractReferenceMovie = (query) => {
   if (!query) return null;
+
+  // First, handle the autocomplete suggestion template: "Tell me more about [Movie] and movies like it"
+  const templateMatch = query.match(/Tell me more about\s+([^,.;!?]+?)\s+and movies like it/i);
+  if (templateMatch) {
+    return templateMatch[1].trim();
+  }
+
   // Look for patterns: "like [movie]", "similar to [movie]", "reminiscent of [movie]"
   const regex = /\b(?:like|similar to|reminiscent of|resembles|analogous to)\s+([^,.;!?]+)/i;
   const match = query.match(regex);
   if (!match) return null;
 
   let movieName = match[1].trim();
+
+  // Ignore pronoun matches like "it", "this", "that", "them", "movie", "film"
+  if (/^(it|this|that|them|movie|film|something)$/i.test(movieName)) {
+    // Attempt to extract reference movie from before "and movies like it/this"
+    const beforeAnd = query.split(/\band\b/i)[0];
+    const aboutMatch = beforeAnd.match(/\b(?:about|for|of)\s+([^,.;!?]+)/i);
+    if (aboutMatch) {
+      return aboutMatch[1].trim();
+    }
+    return null;
+  }
 
   // Strip out trailing phrases/modifiers that might be captured (e.g., "under 2 hours", "not depressing")
   // We split by common transition keywords
@@ -139,14 +157,20 @@ const extractGenres = (query) => {
     'Comedy': ['comedy', 'comedies', 'funny', 'hilarious', 'humorous', 'laugh'],
     'Drama': ['drama', 'dramas', 'dramatic', 'sad'],
     'Sci-Fi': ['sci-fi', 'scifi', 'science fiction', 'space', 'futuristic'],
-    'Action': ['action', 'adventure', 'adventures', 'explosive'],
+    'Action': ['action', 'explosive'],
+    'Adventure': ['adventure', 'adventures', 'quest', 'journey', 'expedition', 'explore'],
     'Horror': ['horror', 'scary', 'spooky', 'creepy'],
     'Thriller': ['thriller', 'thrillers', 'suspenseful', 'suspense'],
     'Romance': ['romance', 'romantic', 'love story', 'lovey-dovey'],
     'Animation': ['animation', 'animated', 'cartoon', 'cartoons', 'anime'],
-    'Fantasy': ['fantasy', 'magic', 'magical'],
+    'Fantasy': ['fantasy', 'magic', 'magical', 'myth', 'mythical', 'fairy tale'],
     'Crime': ['crime', 'gangster', 'detective', 'police', 'heist'],
-    'Mystery': ['mystery', 'mysteries', 'mysterious', 'whodunit']
+    'Mystery': ['mystery', 'mysteries', 'mysterious', 'whodunit'],
+    'Family': ['family', 'kids', 'children', 'parent', 'parents', 'childhood', 'wholesome'],
+    'Documentary': ['documentary', 'documentaries', 'biography', 'real life', 'true story'],
+    'History': ['history', 'historical', 'period piece', 'biographical', 'past'],
+    'War': ['war', 'combat', 'military', 'soldier', 'battle'],
+    'Western': ['western', 'cowboy', 'saloon', 'west']
   };
 
   const detectedGenres = [];
@@ -161,7 +185,30 @@ const extractGenres = (query) => {
     }
   }
 
-  return detectedGenres;
+  // Concept mapping for moods/keywords to relevant genres if no genres were directly matched
+  if (detectedGenres.length === 0) {
+    if (/\b(?:mind-bending|mind-blowing|cerebral|trippy|twist)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Sci-Fi', 'Mystery', 'Thriller');
+    } else if (/\b(?:emotional|tear-jerker|moving|sad|depressing|heartbreaking)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Drama');
+    } else if (/\b(?:date night|romantic|romance|love)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Romance', 'Comedy');
+    } else if (/\b(?:rainy day|cozy|warm|quiet|relaxing)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Drama', 'Comedy');
+    } else if (/\b(?:oscar|award|masterpiece|acclaimed)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Drama');
+    } else if (/\b(?:hidden gem|underrated)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Drama', 'Thriller', 'Mystery');
+    } else if (/\b(?:feel good|uplifting|lighthearted|hilarious)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Comedy', 'Family');
+    } else if (/\b(?:psychological|tense|gripping|suspense)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Thriller', 'Mystery');
+    } else if (/\b(?:classic|timeless|legendary)\b/i.test(cleanedQuery)) {
+      detectedGenres.push('Drama');
+    }
+  }
+
+  return [...new Set(detectedGenres)];
 };
 
 /**
@@ -271,6 +318,7 @@ export const extractIntent = (query) => {
   
   if (!normalized) {
     return {
+      originalQuery: '',
       referenceMovie: null,
       genres: [],
       mood: null,
@@ -281,11 +329,12 @@ export const extractIntent = (query) => {
   }
 
   return {
-    referenceMovie: extractReferenceMovie(query),
-    genres: extractGenres(query),
-    mood: extractMood(query),
-    runtime: extractRuntime(query),
-    avoid: extractAvoid(query),
-    complexity: extractComplexity(query)
+    originalQuery: normalized,
+    referenceMovie: extractReferenceMovie(normalized),
+    genres: extractGenres(normalized),
+    mood: extractMood(normalized),
+    runtime: extractRuntime(normalized),
+    avoid: extractAvoid(normalized),
+    complexity: extractComplexity(normalized)
   };
 };

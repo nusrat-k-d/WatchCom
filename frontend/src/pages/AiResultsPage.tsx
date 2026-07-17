@@ -464,7 +464,8 @@ export function AiResultsPage() {
                       <button
                         key={suggestion}
                         type="button"
-                        onClick={() => {
+                        onMouseDown={(e) => {
+                          e.preventDefault() // Prevents focus loss before search submit
                           setSearchInput(`Tell me more about ${suggestion} and movies like it`)
                           setSearchParams({ q: `Tell me more about ${suggestion} and movies like it` })
                         }}
