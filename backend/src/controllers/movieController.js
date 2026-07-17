@@ -104,3 +104,52 @@ export const getMovieVideos = asyncHandler(async (req, res) => {
   const data = await tmdbService.getMovieVideos(movieId);
   res.status(200).json(data);
 });
+
+/**
+ * Controller for getting movie watch providers
+ * Route: GET /api/movies/:id/watch-providers
+ */
+export const getMovieWatchProviders = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { country } = req.query;
+  const movieId = parseInt(id, 10);
+
+  if (isNaN(movieId) || movieId <= 0) {
+    const error = new Error('Movie ID must be a valid positive integer');
+    error.status = 400;
+    throw error;
+  }
+
+  const response = await tmdbService.getMovieWatchProviders(movieId);
+  
+  const targetCountry = (country || 'US').toUpperCase();
+  const countryData = response.results ? response.results[targetCountry] : null;
+
+  if (!countryData) {
+    return res.status(200).json({
+      country: targetCountry,
+      link: '',
+      stream: [],
+      rent: [],
+      buy: []
+    });
+  }
+
+  const mapProviders = (list) => {
+    if (!list || !Array.isArray(list)) return [];
+    return list.map(item => ({
+      id: item.provider_id,
+      name: item.provider_name,
+      logoUrl: item.logo_path ? `https://image.tmdb.org/t/p/original${item.logo_path}` : null,
+      displayPriority: item.display_priority || 0
+    }));
+  };
+
+  res.status(200).json({
+    country: targetCountry,
+    link: countryData.link || '',
+    stream: mapProviders(countryData.flatrate),
+    rent: mapProviders(countryData.rent),
+    buy: mapProviders(countryData.buy)
+  });
+});

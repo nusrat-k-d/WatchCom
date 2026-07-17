@@ -182,3 +182,15 @@ export const getActorMovieCredits = async (personId) => {
   }
   return fetchFromTMDB(`/person/${personId}/movie_credits`);
 };
+
+/**
+ * Get watch providers for a specific movie by TMDb ID
+ */
+export const getMovieWatchProviders = async (movieId) => {
+  if (!movieId) {
+    const error = new Error('Movie ID is required');
+    error.status = 400;
+    throw error;
+  }
+  return fetchFromTMDB(`/movie/${movieId}/watch/providers`);
+};

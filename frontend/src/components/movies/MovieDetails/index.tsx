@@ -7,6 +7,7 @@ import { AISection } from "./AISection"
 import { CastCarousel } from "./CastCarousel"
 import { SimilarMoviesCarousel } from "./SimilarMoviesCarousel"
 import { LoadingSkeleton } from "./LoadingSkeleton"
+import { AvailableOn } from "./AvailableOn"
 
 import type { AICinematicData } from "../../../lib/ai-profile"
 import type { Movie } from "../../../lib/mock-data"
@@ -154,6 +155,9 @@ export function MovieDetailsView({
         
         {/* Sections: AI Summary, Why Recommended, AI Review */}
         <AISection aiData={aiData} aiInsight={aiInsight} />
+
+        {/* Section: Available On (Streaming, Rent, Buy) */}
+        <AvailableOn movieId={String(movieDetails.id)} movieTitle={movieDetails.title} />
 
         {/* Section: Cast Swipe Carousel */}
         <CastCarousel cast={cast} director={director} />
