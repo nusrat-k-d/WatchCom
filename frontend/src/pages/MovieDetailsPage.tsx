@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
 import { getAICinematicData } from "../lib/ai-profile"
 import type { Movie } from "../lib/mock-data"
 import { MovieDetailsView } from "../components/movies/MovieDetails"
@@ -60,8 +60,38 @@ export function MovieDetailsPage() {
   const [error, setError] = useState<string | null>(null)
   const [retryTrigger, setRetryTrigger] = useState(0)
 
+  const location = useLocation()
+
+  // Resolve AI Insight from Router State or fallback to sessionStorage search cache
+  const aiInsight = useMemo(() => {
+    // 1. Try router state
+    if (location.state?.aiInsight) {
+      return location.state.aiInsight
+    }
+    
+    // 2. Try session storage search results
+    const cachedResults = sessionStorage.getItem("watchcom_last_search_results")
+    if (!cachedResults || !id) return null
+    try {
+      const results = JSON.parse(cachedResults)
+      const cachedMovie = results.find((m: { id: string }) => m.id === id)
+      if (cachedMovie && cachedMovie.confidence) {
+        return {
+          matchScore: cachedMovie.matchScore,
+          confidence: cachedMovie.confidence,
+          reason: cachedMovie.reason,
+          tags: cachedMovie.tags
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing cached AI insights:", e)
+    }
+    return null
+  }, [id, location.state])
+
   // Check cached intent score from search results
   const matchScore = useMemo(() => {
+    if (aiInsight?.matchScore) return aiInsight.matchScore
     const cachedResults = sessionStorage.getItem("watchcom_last_search_results")
     if (!cachedResults || !id) return null
     try {
@@ -71,7 +101,7 @@ export function MovieDetailsPage() {
     } catch {
       return null
     }
-  }, [id])
+  }, [id, aiInsight])
 
   useEffect(() => {
     if (!id) return
@@ -201,6 +231,7 @@ export function MovieDetailsPage() {
       similarMovies={similarMovies}
       trailerUrl={trailerUrl}
       matchScore={matchScore}
+      aiInsight={aiInsight}
       onRetry={() => setRetryTrigger(prev => prev + 1)}
       onNavigateHome={() => navigate("/discover")}
     />

@@ -45,6 +45,13 @@ interface Director {
   profile_path?: string
 }
 
+interface AIInsight {
+  matchScore: number
+  confidence: string
+  reason: string
+  tags: string[]
+}
+
 interface MovieDetailsViewProps {
   isLoading: boolean
   error: string | null
@@ -55,6 +62,7 @@ interface MovieDetailsViewProps {
   similarMovies: Movie[]
   trailerUrl: string | null
   matchScore: number | null
+  aiInsight?: AIInsight | null
   onRetry: () => void
   onNavigateHome: () => void
 }
@@ -69,6 +77,7 @@ export function MovieDetailsView({
   similarMovies,
   trailerUrl,
   matchScore,
+  aiInsight,
   onRetry,
   onNavigateHome
 }: MovieDetailsViewProps) {
@@ -144,7 +153,7 @@ export function MovieDetailsView({
       <div className="container mx-auto px-4 md:px-8 mt-16 space-y-16 max-w-5xl relative z-20">
         
         {/* Sections: AI Summary, Why Recommended, AI Review */}
-        <AISection aiData={aiData} />
+        <AISection aiData={aiData} aiInsight={aiInsight} />
 
         {/* Section: Cast Swipe Carousel */}
         <CastCarousel cast={cast} director={director} />

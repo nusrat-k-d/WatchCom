@@ -66,6 +66,14 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
     >
       <Link 
         to={`/movie/${movie.id}`} 
+        state={{ 
+          aiInsight: { 
+            matchScore: movie.matchScore, 
+            confidence: movie.confidence, 
+            reason: movie.reason, 
+            tags: movie.tags 
+          } 
+        }}
         className="block select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A227] focus-visible:ring-offset-2 rounded-2xl"
         aria-label={`View details for ${movie.title}`}
       >
@@ -115,11 +123,19 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
       </Link>
       
       {/* Movie Details Info */}
-      <div className="flex flex-col gap-2.5 px-1 text-left w-full">
+      <div className="flex flex-col gap-2 px-1 text-left w-full">
         <div className="flex justify-between items-start w-full">
           <div className="min-w-0 flex-1">
             <Link 
               to={`/movie/${movie.id}`}
+              state={{ 
+                aiInsight: { 
+                  matchScore: movie.matchScore, 
+                  confidence: movie.confidence, 
+                  reason: movie.reason, 
+                  tags: movie.tags 
+                } 
+              }}
               className="focus-visible:underline outline-none"
             >
               <h3 className="font-serif font-bold text-sm text-white group-hover:text-[#C9A227] transition-colors duration-300 truncate">
@@ -148,6 +164,15 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
                 </span>
               )}
             </div>
+            
+            {/* Confidence badge (clean and simplified) */}
+            {movie.confidence && (
+              <div className="mt-2">
+                <span className="inline-block text-[9px] font-mono font-bold tracking-wider uppercase text-gray-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                  {movie.confidence}
+                </span>
+              </div>
+            )}
           </div>
           
           {showActions && (
@@ -164,37 +189,6 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
             </button>
           )}
         </div>
-
-        {/* AI Explanation Layer Details */}
-        {movie.confidence && (
-          <div className="space-y-2 pt-2 border-t border-white/5 w-full">
-            {/* Confidence Label */}
-            <div className="inline-block text-[9px] font-mono font-bold tracking-wider uppercase text-gray-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-              {movie.confidence}
-            </div>
-
-            {/* Reason Explanation */}
-            {movie.reason && (
-              <p className="text-[10px] text-gray-400 font-light leading-relaxed line-clamp-2" title={movie.reason}>
-                {movie.reason}
-              </p>
-            )}
-
-            {/* Tags Chips */}
-            {movie.tags && movie.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {movie.tags.slice(0, 3).map(tag => (
-                  <span 
-                    key={tag} 
-                    className="text-[9px] font-medium px-2 py-0.5 bg-[#111112] border border-white/5 text-gray-400 rounded-full hover:text-[#C9A227] hover:border-[#C9A227]/20 transition-colors"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </motion.div>
   )
