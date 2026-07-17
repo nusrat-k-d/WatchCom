@@ -32,11 +32,17 @@ interface CastMember {
   profile_path?: string
 }
 
+interface Director {
+  id: number
+  name: string
+  profile_path?: string
+}
+
 // Global in-memory cache for visited movie details
 const movieDetailsCache = new Map<string, {
   details: MovieDetails
   cast: CastMember[]
-  director: string
+  director: Director | null
   similar: Movie[]
   trailerUrl: string | null
 }>()
@@ -47,7 +53,7 @@ export function MovieDetailsPage() {
 
   const [movieDetails, setMovieDetails] = useState<MovieDetails | null>(null)
   const [cast, setCast] = useState<CastMember[]>([])
-  const [director, setDirector] = useState<string>("Unknown")
+  const [director, setDirector] = useState<Director | null>(null)
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([])
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -102,15 +108,19 @@ export function MovieDetailsPage() {
         setMovieDetails(detailsData)
 
         let resolvedCast: CastMember[] = []
-        let resolvedDirector = "Unknown"
+        let resolvedDirector: Director | null = null
         if (castRes.ok) {
           const castData = await castRes.json()
           resolvedCast = castData.cast || []
           setCast(resolvedCast)
-          const dir = castData.crew?.find((c: { job: string; name: string }) => c.job === "Director")?.name
-          if (dir) {
-            resolvedDirector = dir
-            setDirector(dir)
+          const dirObj = castData.crew?.find((c: { job: string }) => c.job === "Director")
+          if (dirObj) {
+            resolvedDirector = {
+              id: dirObj.id,
+              name: dirObj.name,
+              profile_path: dirObj.profile_path
+            }
+            setDirector(resolvedDirector)
           }
         }
 

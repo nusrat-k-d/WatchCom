@@ -39,13 +39,19 @@ interface CastMember {
   profile_path?: string
 }
 
+interface Director {
+  id: number
+  name: string
+  profile_path?: string
+}
+
 interface MovieDetailsViewProps {
   isLoading: boolean
   error: string | null
   movieDetails: MovieDetails | null
   aiData: AICinematicData | null
   cast: CastMember[]
-  director: string
+  director: Director | null
   similarMovies: Movie[]
   trailerUrl: string | null
   matchScore: number | null
