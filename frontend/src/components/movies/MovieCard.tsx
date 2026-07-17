@@ -15,6 +15,9 @@ type MovieCardProps = {
     genres: string[]
     matchScore?: number
     runtime?: string
+    confidence?: string
+    reason?: string
+    tags?: string[]
   }
   idx?: number
   showActions?: boolean
@@ -112,47 +115,85 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
       </Link>
       
       {/* Movie Details Info */}
-      <div className="flex justify-between items-start px-1">
-        <div className="min-w-0 flex-1">
-          <Link 
-            to={`/movie/${movie.id}`}
-            className="focus-visible:underline outline-none"
-          >
-            <h3 className="font-serif font-bold text-base truncate text-white hover:text-[#C9A227] transition-colors duration-300">
-              {movie.title}
-            </h3>
-          </Link>
-          <div className="flex items-center gap-2 text-xs text-gray-500 mt-1 font-light">
-            <span>{movie.year}</span>
-            <span>•</span>
-            <div className="flex items-center gap-1" aria-label={`Average rating: ${movie.rating.toFixed(1)} out of 5`}>
-              <Star className="h-3 w-3 fill-gray-600 text-gray-600" />
-              <span>{movie.rating.toFixed(1)}</span>
+      <div className="flex flex-col gap-2.5 px-1 text-left w-full">
+        <div className="flex justify-between items-start w-full">
+          <div className="min-w-0 flex-1">
+            <Link 
+              to={`/movie/${movie.id}`}
+              className="focus-visible:underline outline-none"
+            >
+              <h3 className="font-serif font-bold text-sm text-white group-hover:text-[#C9A227] transition-colors duration-300 truncate">
+                {movie.title}
+              </h3>
+            </Link>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-gray-500 mt-1 font-light">
+              <span>{movie.year}</span>
+              <span>•</span>
+              <div className="flex items-center gap-0.5" aria-label={`Average rating: ${movie.rating.toFixed(1)} out of 5`}>
+                <Star className="h-2.5 w-2.5 fill-[#C9A227] text-[#C9A227]" />
+                <span className="text-white font-semibold">{movie.rating.toFixed(1)}</span>
+              </div>
+              {movie.runtime && movie.runtime !== "N/A" && (
+                <>
+                  <span>•</span>
+                  <div className="flex items-center gap-0.5" aria-label={`Runtime: ${movie.runtime}`}>
+                    <Clock className="h-2.5 w-2.5 text-gray-600" />
+                    <span>{movie.runtime.replace(" min", "m")}</span>
+                  </div>
+                </>
+              )}
+              {movie.matchScore !== undefined && movie.matchScore > 0 && (
+                <span className="text-[#C9A227] font-bold font-mono ml-auto">
+                  {movie.matchScore}% Match
+                </span>
+              )}
             </div>
-            {movie.runtime && movie.runtime !== "N/A" && (
-              <>
-                <span>•</span>
-                <div className="flex items-center gap-0.5" aria-label={`Runtime: ${movie.runtime}`}>
-                  <Clock className="h-3 w-3 text-gray-600" />
-                  <span>{movie.runtime.replace(" min", "m")}</span>
-                </div>
-              </>
+          </div>
+          
+          {showActions && (
+            <button 
+              onClick={(e) => {
+                e.preventDefault()
+                dismissMovie(movie.id, "not_interested")
+              }}
+              className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-gray-500 hover:text-white shrink-0 ml-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227]"
+              title="Not Interested"
+              aria-label={`Dismiss ${movie.title} from recommendations`}
+            >
+              <EyeOff className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* AI Explanation Layer Details */}
+        {movie.confidence && (
+          <div className="space-y-2 pt-2 border-t border-white/5 w-full">
+            {/* Confidence Label */}
+            <div className="inline-block text-[9px] font-mono font-bold tracking-wider uppercase text-gray-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+              {movie.confidence}
+            </div>
+
+            {/* Reason Explanation */}
+            {movie.reason && (
+              <p className="text-[10px] text-gray-400 font-light leading-relaxed line-clamp-2" title={movie.reason}>
+                {movie.reason}
+              </p>
+            )}
+
+            {/* Tags Chips */}
+            {movie.tags && movie.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {movie.tags.slice(0, 3).map(tag => (
+                  <span 
+                    key={tag} 
+                    className="text-[9px] font-medium px-2 py-0.5 bg-[#111112] border border-white/5 text-gray-400 rounded-full hover:text-[#C9A227] hover:border-[#C9A227]/20 transition-colors"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
-        </div>
-        
-        {showActions && (
-          <button 
-            onClick={(e) => {
-              e.preventDefault()
-              dismissMovie(movie.id, "not_interested")
-            }}
-            className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-gray-500 hover:text-white shrink-0 ml-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227]"
-            title="Not Interested"
-            aria-label={`Dismiss ${movie.title} from recommendations`}
-          >
-            <EyeOff className="h-4 w-4" />
-          </button>
         )}
       </div>
     </motion.div>

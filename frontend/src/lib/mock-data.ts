@@ -18,6 +18,9 @@ export type Movie = {
   confidenceLabel?: "High" | "Medium" | "Exploratory";
   hiddenGemReason?: string;
   discoveryScore?: number;
+  confidence?: string;
+  reason?: string;
+  tags?: string[];
 };
 
 export const MOCK_MOVIES: Movie[] = [
