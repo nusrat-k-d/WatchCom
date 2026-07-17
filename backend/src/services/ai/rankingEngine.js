@@ -116,6 +116,15 @@ const calculateScore = (movie, intent, refMovieGenreIds) => {
     }
   }
 
+  // Rule 5.5: Match positive custom keywords (+30 points per match)
+  if (intent && intent.customKeywords && intent.customKeywords.length > 0) {
+    for (const kw of intent.customKeywords) {
+      if (kw && (overview.includes(kw.toLowerCase()) || title.includes(kw.toLowerCase()))) {
+        score += 30;
+      }
+    }
+  }
+
   // Rule 6: Avoid list filtering (heavily penalize matching avoid items: -100 points)
   if (intent && intent.avoid && intent.avoid.length > 0) {
     for (const avoidWord of intent.avoid) {

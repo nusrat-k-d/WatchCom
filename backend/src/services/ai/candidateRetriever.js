@@ -120,11 +120,51 @@ export const getCandidateMovies = async (intent) => {
     }
   }
 
-  // Step 3: Filter by Runtime (if runtime exists)
+  // Step 3: Filter by Runtime, Release Year, Min Rating, and Exclusions
   let filteredCandidates = uniqueCandidates;
+
+  // A. Filter out avoid list items strictly
+  if (intent.avoid && intent.avoid.length > 0) {
+    filteredCandidates = filteredCandidates.filter(movie => {
+      const title = (movie.title || '').toLowerCase();
+      const overview = (movie.overview || '').toLowerCase();
+      return !intent.avoid.some(word => {
+        if (!word) return false;
+        const lowerWord = word.toLowerCase();
+        return title.includes(lowerWord) || overview.includes(lowerWord);
+      });
+    });
+  }
+
+  // B. Release year min filter
+  if (intent.releaseYearMin) {
+    filteredCandidates = filteredCandidates.filter(movie => {
+      if (!movie.release_date) return false;
+      const year = parseInt(movie.release_date.split('-')[0], 10);
+      return !isNaN(year) && year >= intent.releaseYearMin;
+    });
+  }
+
+  // C. Release year max filter
+  if (intent.releaseYearMax) {
+    filteredCandidates = filteredCandidates.filter(movie => {
+      if (!movie.release_date) return false;
+      const year = parseInt(movie.release_date.split('-')[0], 10);
+      return !isNaN(year) && year <= intent.releaseYearMax;
+    });
+  }
+
+  // D. Minimum Rating filter
+  if (intent.minRating) {
+    filteredCandidates = filteredCandidates.filter(movie => {
+      return movie.vote_average !== undefined && movie.vote_average >= intent.minRating;
+    });
+  }
+
+  // E. Runtime filter
   if (intent.runtime) {
     const detailedCandidates = [];
-    for (const movie of uniqueCandidates) {
+    for (const movie of filteredCandidates) {
       try {
         const details = await tmdbService.getMovieDetails(movie.id);
         if (details) {
@@ -137,7 +177,6 @@ export const getCandidateMovies = async (intent) => {
 
     filteredCandidates = detailedCandidates.filter(movie => {
       if (!movie) return false;
-      // If runtime exists and exceeds the requested limit, filter it out
       if (movie.runtime && movie.runtime > intent.runtime) {
         return false;
       }
