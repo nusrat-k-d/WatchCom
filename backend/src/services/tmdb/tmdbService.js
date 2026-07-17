@@ -158,3 +158,27 @@ export const getMovieVideos = async (movieId) => {
   }
   return fetchFromTMDB(`/movie/${movieId}/videos`);
 };
+
+/**
+ * Get actor details by person ID
+ */
+export const getActorDetails = async (personId) => {
+  if (!personId) {
+    const error = new Error('Person ID is required');
+    error.status = 400;
+    throw error;
+  }
+  return fetchFromTMDB(`/person/${personId}`);
+};
+
+/**
+ * Get actor movie credits by person ID
+ */
+export const getActorMovieCredits = async (personId) => {
+  if (!personId) {
+    const error = new Error('Person ID is required');
+    error.status = 400;
+    throw error;
+  }
+  return fetchFromTMDB(`/person/${personId}/movie_credits`);
+};

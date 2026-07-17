@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Users, Award } from "lucide-react"
 import { LazyImage } from "../../ui/LazyImage"
@@ -58,9 +59,10 @@ export function CastCarousel({ cast, director }: CastCarouselProps) {
               : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
 
             return (
-              <div 
+              <Link 
                 key={actor.id} 
-                className="flex flex-col items-center text-center shrink-0 w-36 snap-start group cursor-pointer"
+                to={`/actor/${actor.id}`}
+                className="flex flex-col items-center text-center shrink-0 w-36 snap-start group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227] rounded-2xl p-1"
               >
                 <div className="w-28 h-28 rounded-2xl overflow-hidden border border-white/5 bg-[#0b0b0c] mb-4 group-hover:border-[#C9A227]/40 group-hover:shadow-[0_12px_25px_rgba(0,0,0,0.8),0_0_20px_rgba(201,162,39,0.15)] transition-all duration-500 group-hover:-translate-y-1.5 relative">
                   <LazyImage 
@@ -75,7 +77,7 @@ export function CastCarousel({ cast, director }: CastCarouselProps) {
                 <span className="text-[10px] text-gray-500 truncate w-full font-light mt-0.5">
                   {actor.character}
                 </span>
-              </div>
+              </Link>
             )
           })}
         </div>

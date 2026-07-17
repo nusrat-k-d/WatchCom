@@ -8,6 +8,7 @@ const TrendingPage = lazy(() => import("./pages/TrendingPage").then(m => ({ defa
 const DiscoverPage = lazy(() => import("./pages/DiscoverPage").then(m => ({ default: m.DiscoverPage })))
 const MovieDetailsPage = lazy(() => import("./pages/MovieDetailsPage").then(m => ({ default: m.MovieDetailsPage })))
 const AiResultsPage = lazy(() => import("./pages/AiResultsPage").then(m => ({ default: m.AiResultsPage })))
+const ActorPage = lazy(() => import("./pages/ActorPage").then(m => ({ default: m.ActorPage })))
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(m => ({ default: m.NotFoundPage })))
 
 // Premium Page-wide Skeleton Fallback
@@ -39,6 +40,7 @@ function App() {
               <Route path="/trending" element={<TrendingPage />} />
               <Route path="/ai-results" element={<AiResultsPage />} />
               <Route path="/movie/:id" element={<MovieDetailsPage />} />
+              <Route path="/actor/:id" element={<ActorPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
