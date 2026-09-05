@@ -92,8 +92,8 @@ export const matchCouplesTastes = async ({ person1Query, person2Query, person1Na
     };
   }).sort((a, b) => (b.watchComScore || 0) - (a.watchComScore || 0));
 
-  // Enrich with baseline recommendations
-  const enriched = await enrichRecommendations(couplesRanked.slice(0, 15), mergedIntent);
+  // Enrich with baseline recommendations (Top 18 movies)
+  const enriched = await enrichRecommendations(couplesRanked.slice(0, 18), mergedIntent);
 
   // Generate dual-perspective justifications
   const enrichedWithCouplesReasons = await generateCouplesJustifications(
@@ -119,7 +119,7 @@ async function generateCouplesJustifications(movies, intent1, intent2, name1, na
 
   if (ai && movies.length > 0) {
     try {
-      const summaryList = movies.slice(0, 5).map(m => ({ id: m.id, title: m.title, overview: m.overview }));
+      const summaryList = movies.slice(0, 8).map(m => ({ id: m.id, title: m.title, overview: m.overview }));
       const prompt = `You are WatchCom's Couples Recommendation Engine.
 We have two viewers with different tastes:
 - ${name1}'s Taste: "${intent1.originalQuery || 'General film'}" (Mood: ${intent1.mood || 'Any'}, Genres: ${intent1.genres?.join(', ') || 'Any'})
