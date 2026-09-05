@@ -10,7 +10,7 @@ export const extractMovieIntent = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const intent = extractIntent(query);
+  const intent = await extractIntent(query);
 
   res.status(200).json(intent);
 });

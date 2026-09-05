@@ -308,12 +308,12 @@ const extractComplexity = (query) => {
   return null;
 };
 
+import { extractIntentWithGemini } from './geminiClient.js';
+
 /**
- * Extracts structured movie request parameters from natural language query.
- * @param {string} query - Natural language user request
- * @returns {object} Structured intent representation
+ * Heuristic intent extractor (Regex/rule-based fallback).
  */
-export const extractIntent = (query) => {
+export const extractHeuristicIntent = (query) => {
   const normalized = normalizeQuery(query);
   
   if (!normalized) {
@@ -338,3 +338,26 @@ export const extractIntent = (query) => {
     complexity: extractComplexity(normalized)
   };
 };
+
+/**
+ * Extracts structured movie request parameters from natural language query.
+ * Uses Gemini LLM when available, otherwise falls back to heuristics.
+ * @param {string} query - Natural language user request
+ * @returns {Promise<object>} Structured intent representation
+ */
+export const extractIntent = async (query) => {
+  const normalized = normalizeQuery(query);
+  if (!normalized) {
+    return extractHeuristicIntent('');
+  }
+
+  // Attempt extraction via Gemini LLM
+  const geminiResult = await extractIntentWithGemini(normalized);
+  if (geminiResult) {
+    return geminiResult;
+  }
+
+  // Graceful fallback to regex heuristics
+  return extractHeuristicIntent(normalized);
+};
+

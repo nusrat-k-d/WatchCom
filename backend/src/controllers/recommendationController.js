@@ -9,7 +9,7 @@ export const recommendMovies = asyncHandler(async (req, res) => {
     const { query, refinements } = req.body;
 
     // 1. Extract base intent
-    const baseIntent = extractIntent(query);
+    const baseIntent = await extractIntent(query);
 
     // 2. Refine the intent using applied refinements
     const refinedIntent = refineIntent(baseIntent, refinements || []);
@@ -21,7 +21,7 @@ export const recommendMovies = asyncHandler(async (req, res) => {
     const rankedCandidates = await rankMovies(candidates, refinedIntent);
 
     // 5. Build AI justifications
-    const enrichedRecommendations = enrichRecommendations(rankedCandidates, refinedIntent);
+    const enrichedRecommendations = await enrichRecommendations(rankedCandidates, refinedIntent);
 
     res.status(200).json({
         intent: refinedIntent,

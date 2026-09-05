@@ -157,20 +157,31 @@ const extractTags = (movie) => {
   return uniqueTags.slice(0, 5);
 };
 
+import { generateDynamicExplanations } from './geminiClient.js';
+
 /**
  * Enriches ranked candidates with score, confidence level, reason, and tags.
+ * Uses Gemini LLM for personalized justifications when available, falling back to heuristics.
  * 
  * @param {object[]} rankedCandidates - The ranked candidates from rankingEngine
  * @param {object} intent - The user intent
- * @returns {object[]} Enriched candidates
+ * @returns {Promise<object[]>} Enriched candidates
  */
-export const enrichRecommendations = (rankedCandidates, intent) => {
+export const enrichRecommendations = async (rankedCandidates, intent) => {
   if (!rankedCandidates || !Array.isArray(rankedCandidates)) return [];
+
+  // Attempt dynamic LLM explanations for top candidates
+  let dynamicReasons = null;
+  try {
+    dynamicReasons = await generateDynamicExplanations(rankedCandidates, intent);
+  } catch (err) {
+    console.warn('[ExplanationLayer] LLM explanation generation failed, using heuristic reasons:', err.message);
+  }
 
   return rankedCandidates.map(movie => {
     const watchComScore = getNormalizedScore(movie.watchComScore);
     const confidence = getConfidence(watchComScore);
-    const reason = generateReason(movie, intent);
+    const reason = (dynamicReasons && dynamicReasons.get(movie.id)) || generateReason(movie, intent);
     const tags = extractTags(movie);
 
     return {
