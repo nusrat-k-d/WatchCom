@@ -1,9 +1,10 @@
-import React, { useRef } from "react"
+import React, { useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Star, Eye, EyeOff, Clock, Heart } from "lucide-react"
+import { Star, Eye, EyeOff, Clock, Heart, Play } from "lucide-react"
 import { useTaste } from "../../context/UserTasteContext"
 import { LazyImage } from "../ui/LazyImage"
+import { TrailerModal } from "./TrailerModal"
 
 type MovieCardProps = {
   movie: {
@@ -25,6 +26,7 @@ type MovieCardProps = {
 
 export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showActions = false }: MovieCardProps) {
   const { isDismissed, getRatingForMovie, dismissMovie, addFavorite, removeFavorite, isFavorite } = useTaste()
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
   if (isDismissed(movie.id)) {
@@ -120,6 +122,20 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
               {userRating}
             </div>
           )}
+
+          {/* Play Trailer Button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setIsTrailerOpen(true)
+            }}
+            className="absolute bottom-3 left-3 z-30 p-2.5 bg-black/60 hover:bg-[#C9A227] backdrop-blur-md rounded-full border border-white/10 hover:border-[#C9A227] text-gray-300 hover:text-black transition-all cursor-pointer shadow-lg active:scale-90 focus:outline-none"
+            title="Watch Trailer"
+            aria-label={`Watch trailer for ${movie.title}`}
+          >
+            <Play className="h-4 w-4 fill-current ml-0.5" />
+          </button>
 
           {/* Favorites Heart Icon */}
           <button
@@ -221,6 +237,13 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
           )}
         </div>
       </div>
+
+      <TrailerModal
+        movieId={movie.id}
+        movieTitle={movie.title}
+        isOpen={isTrailerOpen}
+        onClose={() => setIsTrailerOpen(false)}
+      />
     </motion.div>
   )
 })
