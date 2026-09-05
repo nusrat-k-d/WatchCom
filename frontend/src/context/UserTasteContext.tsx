@@ -32,6 +32,7 @@ type UserTasteContextType = {
   dismissals: Dismissal[]
   favorites: FavoriteMovie[]
   rateMovie: (movieId: string, score: number) => void
+  bulkImportRatings: (importedRatings: Rating[]) => void
   dismissMovie: (movieId: string, reason: "not_interested" | "already_seen") => void
   getRatingForMovie: (movieId: string) => number | null
   isDismissed: (movieId: string) => boolean
@@ -51,7 +52,31 @@ type UserTasteContextType = {
 const UserTasteContext = createContext<UserTasteContextType | undefined>(undefined)
 
 export function UserTasteProvider({ children }: { children: React.ReactNode }) {
-  const [ratings, setRatings] = useState<Rating[]>([])
+  const [ratings, setRatings] = useState<Rating[]>(() => {
+    try {
+      const stored = localStorage.getItem("watchcom_ratings")
+      if (stored) return JSON.parse(stored)
+    } catch (e) {
+      console.error(e)
+    }
+    return [
+      { movieId: MOCK_MOVIES[0]?.id || "1", score: 5, date: new Date().toISOString() },
+      { movieId: MOCK_MOVIES[2]?.id || "3", score: 4, date: new Date().toISOString() },
+      { movieId: MOCK_MOVIES[5]?.id || "6", score: 3, date: new Date().toISOString() },
+      { movieId: MOCK_MOVIES[8]?.id || "9", score: 5, date: new Date().toISOString() },
+      { movieId: MOCK_MOVIES[9]?.id || "10", score: 2, date: new Date().toISOString() }
+    ]
+  })
+
+  // Persist ratings to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("watchcom_ratings", JSON.stringify(ratings))
+    } catch (e) {
+      console.error("Failed to persist ratings:", e)
+    }
+  }, [ratings])
+
   const [dismissals, setDismissals] = useState<Dismissal[]>([])
   const [favorites, setFavorites] = useState<FavoriteMovie[]>(() => {
     try {
@@ -71,20 +96,19 @@ export function UserTasteProvider({ children }: { children: React.ReactNode }) {
     }
   }, [favorites])
 
-  useEffect(() => {
-    setRatings([
-      { movieId: MOCK_MOVIES[0]?.id || "1", score: 5, date: new Date().toISOString() },
-      { movieId: MOCK_MOVIES[2]?.id || "3", score: 4, date: new Date().toISOString() },
-      { movieId: MOCK_MOVIES[5]?.id || "6", score: 3, date: new Date().toISOString() },
-      { movieId: MOCK_MOVIES[8]?.id || "9", score: 5, date: new Date().toISOString() },
-      { movieId: MOCK_MOVIES[9]?.id || "10", score: 2, date: new Date().toISOString() }
-    ])
-  }, [])
-
   const rateMovie = useCallback((movieId: string, score: number) => {
     setRatings(prev => {
       const existing = prev.filter(r => r.movieId !== movieId)
       return [...existing, { movieId, score, date: new Date().toISOString() }]
+    })
+  }, [])
+
+  const bulkImportRatings = useCallback((imported: Rating[]) => {
+    setRatings(prev => {
+      const map = new Map<string, Rating>()
+      prev.forEach(r => map.set(r.movieId, r))
+      imported.forEach(r => map.set(r.movieId, r))
+      return Array.from(map.values())
     })
   }, [])
 
@@ -152,6 +176,7 @@ export function UserTasteProvider({ children }: { children: React.ReactNode }) {
     dismissals,
     favorites,
     rateMovie,
+    bulkImportRatings,
     dismissMovie,
     getRatingForMovie,
     isDismissed,
@@ -159,7 +184,7 @@ export function UserTasteProvider({ children }: { children: React.ReactNode }) {
     removeFavorite,
     isFavorite,
     metrics
-  }), [ratings, dismissals, favorites, rateMovie, dismissMovie, getRatingForMovie, isDismissed, addFavorite, removeFavorite, isFavorite, metrics])
+  }), [ratings, dismissals, favorites, rateMovie, bulkImportRatings, dismissMovie, getRatingForMovie, isDismissed, addFavorite, removeFavorite, isFavorite, metrics])
 
   return (
     <UserTasteContext.Provider value={value}>

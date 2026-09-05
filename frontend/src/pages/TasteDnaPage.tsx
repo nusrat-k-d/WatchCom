@@ -1,11 +1,14 @@
+import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Dna, Sparkles } from "lucide-react"
+import { Dna, Sparkles, UploadCloud } from "lucide-react"
 import { TasteDnaRadar } from "../components/profile/TasteDnaRadar"
+import { CsvImporterModal } from "../components/profile/CsvImporterModal"
 import { useTaste } from "../context/UserTasteContext"
 import { Button } from "../components/ui/button"
 
 export function TasteDnaPage() {
   const { metrics, ratings, favorites } = useTaste()
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-20 px-4 sm:px-6 lg:px-8">
@@ -26,14 +29,27 @@ export function TasteDnaPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setIsImportOpen(true)}
+              variant="outline"
+              className="border-white/10 hover:border-[#C9A227]/40 text-gray-300 hover:text-white text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer"
+            >
+              <UploadCloud className="w-4 h-4 text-[#C9A227]" />
+              <span>Import Letterboxd/IMDb</span>
+            </Button>
             <Link to="/discover">
-              <Button className="bg-[#C9A227] hover:bg-[#B38F1E] text-black font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-[#C9A227]/20">
+              <Button className="bg-[#C9A227] hover:bg-[#B38F1E] text-black font-semibold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-[#C9A227]/20 cursor-pointer">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Get Recommendations</span>
               </Button>
             </Link>
           </div>
         </div>
+
+        <CsvImporterModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+        />
 
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
