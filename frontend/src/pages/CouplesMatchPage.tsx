@@ -58,7 +58,7 @@ export function CouplesMatchPage() {
     setHasSearched(true)
 
     try {
-      const response = await fetch("http://localhost:5000/api/ai/recommend/couples-match", {
+      const response = await fetch("http://localhost:5000/api/ai/couples-match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -70,7 +70,8 @@ export function CouplesMatchPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to compute couples match")
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.message || `Server returned status ${response.status}. Make sure backend is running.`)
       }
 
       const data = await response.json()
