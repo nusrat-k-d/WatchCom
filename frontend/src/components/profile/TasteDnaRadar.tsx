@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
-import { Dna, Sparkles, Share2 } from "lucide-react"
+import { Dna, Sparkles, Share2, Camera } from "lucide-react"
 import { useTaste } from "../../context/UserTasteContext"
+import { TasteDnaStoryCardModal } from "./TasteDnaStoryCardModal"
 import { Button } from "../ui/button"
 
 interface DimensionScore {
@@ -13,8 +14,9 @@ interface DimensionScore {
 }
 
 export function TasteDnaRadar() {
-  const { ratings, favorites } = useTaste()
+  const { ratings, favorites, metrics } = useTaste()
   const [activeDimension, setActiveDimension] = useState<DimensionScore | null>(null)
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
   // Compute 6-axis taste dimensions dynamically based on ratings and favorited movies
@@ -143,23 +145,34 @@ export function TasteDnaRadar() {
           </div>
         </div>
 
-        <Button
-          onClick={handleShare}
-          variant="outline"
-          className="border-white/10 hover:border-[#C9A227]/40 text-gray-200 hover:text-white px-4 py-2 text-xs flex items-center gap-2 cursor-pointer shrink-0"
-        >
-          {copied ? (
-            <>
-              <Sparkles className="w-3.5 h-3.5 text-[#C9A227]" />
-              <span className="text-[#C9A227] font-semibold">DNA Copied!</span>
-            </>
-          ) : (
-            <>
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Share Profile</span>
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            onClick={() => setIsStoryModalOpen(true)}
+            variant="outline"
+            className="border-[#C9A227]/30 hover:border-[#C9A227] bg-[#C9A227]/10 hover:bg-[#C9A227]/20 text-[#C9A227] px-4 py-2 text-xs flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>Export Story Card</span>
+          </Button>
+
+          <Button
+            onClick={handleShare}
+            variant="outline"
+            className="border-white/10 hover:border-[#C9A227]/40 text-gray-200 hover:text-white px-4 py-2 text-xs flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            {copied ? (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-[#C9A227]" />
+                <span className="text-[#C9A227] font-semibold">DNA Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Share Profile</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Radar Chart & Details Grid */}
@@ -316,6 +329,14 @@ export function TasteDnaRadar() {
           })}
         </div>
       </div>
+
+      <TasteDnaStoryCardModal
+        isOpen={isStoryModalOpen}
+        onClose={() => setIsStoryModalOpen(false)}
+        dimensions={dimensions}
+        metrics={metrics}
+        topFilms={favorites.map(f => f.title).slice(0, 3)}
+      />
     </div>
   )
 }
