@@ -28,7 +28,8 @@ app.get('/', (req, res) => {
 // API routes
 app.use('/api/movies', movieRoutes);
 app.use('/api/ai', aiRoutes);
-app.use("/api/ai/recommend", recommendationRoutes);
+app.use('/api/ai/recommend', recommendationRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/actors', actorRoutes);
 app.use('/api/directors', directorRoutes);
 

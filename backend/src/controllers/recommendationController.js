@@ -3,6 +3,7 @@ import { refineIntent } from "../services/ai/refinementLayer.js";
 import { getCandidateMovies } from "../services/ai/candidateRetriever.js";
 import { rankMovies } from "../services/ai/rankingEngine.js";
 import { enrichRecommendations } from "../services/ai/explanationLayer.js";
+import { matchCouplesTastes } from "../services/ai/couplesMatcher.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const recommendMovies = asyncHandler(async (req, res) => {
@@ -27,4 +28,23 @@ export const recommendMovies = asyncHandler(async (req, res) => {
         intent: refinedIntent,
         recommendations: enrichedRecommendations
     });
+});
+
+export const couplesMatch = asyncHandler(async (req, res) => {
+    const { person1Query, person2Query, person1Name, person2Name } = req.body;
+
+    if (!person1Query || !person2Query) {
+        const error = new Error("Both person1Query and person2Query are required for couples match");
+        error.status = 400;
+        throw error;
+    }
+
+    const result = await matchCouplesTastes({
+        person1Query,
+        person2Query,
+        person1Name,
+        person2Name
+    });
+
+    res.status(200).json(result);
 });
