@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { motion } from "framer-motion"
 import { X, RefreshCw, AlertCircle, ExternalLink, Film } from "lucide-react"
 
@@ -66,12 +67,16 @@ export function TrailerModal({ movieId, movieTitle, isOpen, onClose }: TrailerMo
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+  return typeof document !== "undefined" ? createPortal(
+    <div 
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in"
+      onClick={onClose}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-4xl rounded-3xl bg-[#09090a] border border-white/10 shadow-2xl overflow-hidden"
       >
         {/* Header Bar */}
@@ -86,6 +91,7 @@ export function TrailerModal({ movieId, movieTitle, isOpen, onClose }: TrailerMo
           <button
             onClick={onClose}
             className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all cursor-pointer"
+            aria-label="Close trailer player"
           >
             <X className="w-4 h-4" />
           </button>
@@ -100,9 +106,9 @@ export function TrailerModal({ movieId, movieTitle, isOpen, onClose }: TrailerMo
             </div>
           ) : videoKey ? (
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoKey}?autoplay=1&rel=0&modestbranding=1`}
+              src={`https://www.youtube.com/embed/${videoKey}?autoplay=1&controls=1&rel=0&modestbranding=0&playsinline=1&enablejsapi=1`}
               title={`${movieTitle} Trailer`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               className="w-full h-full border-0"
             />
@@ -125,6 +131,7 @@ export function TrailerModal({ movieId, movieTitle, isOpen, onClose }: TrailerMo
           )}
         </div>
       </motion.div>
-    </div>
-  )
+    </div>,
+    document.body
+  ) : null
 }

@@ -23,6 +23,13 @@ export function AISection({ aiData, aiInsight }: AISectionProps) {
     transition: { duration: 0.8, ease: "easeOut" }
   } as const
 
+  const hasValidInsight = Boolean(
+    aiInsight && (
+      (typeof aiInsight.matchScore === "number" && aiInsight.matchScore > 0) ||
+      (typeof aiInsight.reason === "string" && aiInsight.reason.trim().length > 0)
+    )
+  )
+
   return (
     <div className="space-y-8 py-6">
       
@@ -51,8 +58,8 @@ export function AISection({ aiData, aiInsight }: AISectionProps) {
         </div>
       </motion.section>
 
-      {/* 2. AI INSIGHT CARD (Conditionally Rendered) */}
-      {aiInsight && (
+      {/* 2. AI INSIGHT CARD (Conditionally Rendered when valid) */}
+      {hasValidInsight && aiInsight && (
         <motion.section 
           initial={{ opacity: 0, y: 35 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -81,27 +88,33 @@ export function AISection({ aiData, aiInsight }: AISectionProps) {
               </div>
 
               {/* Match Score Badge */}
-              <div className="flex items-center gap-3">
-                <div className="text-left md:text-right">
-                  <div className="text-xl font-serif font-black text-white leading-none">
-                    {aiInsight.matchScore}% Match
-                  </div>
-                  <div className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider mt-1.5">
-                    {aiInsight.confidence}
+              {aiInsight.matchScore !== undefined && aiInsight.matchScore > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="text-left md:text-right">
+                    <div className="text-xl font-serif font-black text-white leading-none">
+                      {aiInsight.matchScore}% Match
+                    </div>
+                    {aiInsight.confidence && (
+                      <div className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider mt-1.5">
+                        {aiInsight.confidence}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Why Recommended */}
-            <div className="mt-6 space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 font-mono">
-                Why WatchCom Recommended This
-              </h3>
-              <p className="text-base text-gray-300 font-sans font-light leading-relaxed max-w-3xl">
-                {aiInsight.reason}
-              </p>
-            </div>
+            {aiInsight.reason && (
+              <div className="mt-6 space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 font-mono">
+                  Why WatchCom Recommended This
+                </h3>
+                <p className="text-base text-gray-300 font-sans font-light leading-relaxed max-w-3xl">
+                  {aiInsight.reason}
+                </p>
+              </div>
+            )}
 
             {/* Tags */}
             {aiInsight.tags && aiInsight.tags.length > 0 && (

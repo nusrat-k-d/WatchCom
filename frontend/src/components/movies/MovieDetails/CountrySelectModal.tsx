@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Globe, X } from "lucide-react"
 
@@ -22,10 +23,12 @@ interface CountrySelectModalProps {
 }
 
 export function CountrySelectModal({ isOpen, onClose, onSelect }: CountrySelectModalProps) {
-  return (
+  if (!isOpen) return null
+
+  return typeof document !== "undefined" ? createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
           {/* Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -83,6 +86,7 @@ export function CountrySelectModal({ isOpen, onClose, onSelect }: CountrySelectM
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
-  )
+    </AnimatePresence>,
+    document.body
+  ) : null
 }

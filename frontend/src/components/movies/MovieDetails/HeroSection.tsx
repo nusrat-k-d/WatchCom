@@ -244,7 +244,7 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
               </div>
 
               {/* Large Premium Gold Trailer Button */}
-              <TrailerButton trailerUrl={trailerUrl} />
+              <TrailerButton trailerUrl={trailerUrl} movieTitle={movieDetails.title} />
             </motion.div>
 
             {/* Editorial Stats Grid */}

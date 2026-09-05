@@ -67,14 +67,14 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
     >
       <Link 
         to={`/movie/${movie.id}`} 
-        state={{ 
+        state={movie.matchScore || movie.reason ? { 
           aiInsight: { 
             matchScore: movie.matchScore, 
             confidence: movie.confidence, 
             reason: movie.reason, 
             tags: movie.tags 
           } 
-        }}
+        } : undefined}
         className="block select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A227] focus-visible:ring-offset-2 rounded-2xl"
         aria-label={`View details for ${movie.title}`}
       >
@@ -159,14 +159,14 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
           <div className="min-w-0 flex-1">
             <Link 
               to={`/movie/${movie.id}`}
-              state={{ 
+              state={movie.matchScore || movie.reason ? { 
                 aiInsight: { 
                   matchScore: movie.matchScore, 
                   confidence: movie.confidence, 
                   reason: movie.reason, 
                   tags: movie.tags 
                 } 
-              }}
+              } : undefined}
               className="focus-visible:underline outline-none"
             >
               <h3 className="font-serif font-bold text-sm text-white group-hover:text-[#C9A227] transition-colors duration-300 truncate">
