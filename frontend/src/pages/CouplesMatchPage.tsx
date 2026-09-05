@@ -266,14 +266,14 @@ export function CouplesMatchPage() {
                 <p className="text-sm text-gray-500 mt-1">Try broadening your queries or selecting different presets.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
                 {results.map((movie, idx) => (
                   <motion.div
                     key={movie.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="p-4 rounded-3xl bg-white/[0.02] border border-white/10 hover:border-[#C9A227]/40 backdrop-blur-md transition-all flex flex-col justify-between space-y-4 shadow-xl"
+                    transition={{ delay: idx * 0.03 }}
+                    className="p-2.5 sm:p-3 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-[#C9A227]/40 backdrop-blur-md transition-all flex flex-col justify-between space-y-2.5 shadow-lg group"
                   >
                     <div>
                       {/* Movie Card Preview */}
@@ -293,22 +293,22 @@ export function CouplesMatchPage() {
                         showActions={true}
                       />
 
-                      {/* Dual Breakdown Box */}
+                      {/* Compact Dual Breakdown Box */}
                       {movie.couplesBreakdown && (
-                        <div className="mt-4 p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-2.5 text-xs">
-                          <div className="flex items-start gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-[#C9A227]/20 text-[#C9A227] font-semibold shrink-0">
-                              For {name1}
+                        <div className="mt-2.5 p-2 rounded-xl bg-black/50 border border-white/5 space-y-1.5 text-[11px] leading-tight">
+                          <div className="flex items-start gap-1.5">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#C9A227]/20 text-[#C9A227] shrink-0">
+                              {name1}
                             </span>
-                            <span className="text-gray-300 leading-relaxed">
+                            <span className="text-gray-300 line-clamp-2">
                               {movie.couplesBreakdown.forPerson1}
                             </span>
                           </div>
-                          <div className="flex items-start gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-400 font-semibold shrink-0">
-                              For {name2}
+                          <div className="flex items-start gap-1.5">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-pink-500/20 text-pink-400 shrink-0">
+                              {name2}
                             </span>
-                            <span className="text-gray-300 leading-relaxed">
+                            <span className="text-gray-300 line-clamp-2">
                               {movie.couplesBreakdown.forPerson2}
                             </span>
                           </div>
