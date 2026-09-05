@@ -13,13 +13,31 @@ type Dismissal = {
   date: string
 }
 
+export type FavoriteMovie = {
+  id: string
+  title: string
+  year: number
+  posterUrl: string
+  rating: number
+  genres: string[]
+  matchScore?: number
+  runtime?: string
+  confidence?: string
+  reason?: string
+  tags?: string[]
+}
+
 type UserTasteContextType = {
   ratings: Rating[]
   dismissals: Dismissal[]
+  favorites: FavoriteMovie[]
   rateMovie: (movieId: string, score: number) => void
   dismissMovie: (movieId: string, reason: "not_interested" | "already_seen") => void
   getRatingForMovie: (movieId: string) => number | null
   isDismissed: (movieId: string) => boolean
+  addFavorite: (movie: FavoriteMovie) => void
+  removeFavorite: (movieId: string) => void
+  isFavorite: (movieId: string) => boolean
   metrics: {
     totalRated: number
     profileStrength: number
@@ -35,6 +53,23 @@ const UserTasteContext = createContext<UserTasteContextType | undefined>(undefin
 export function UserTasteProvider({ children }: { children: React.ReactNode }) {
   const [ratings, setRatings] = useState<Rating[]>([])
   const [dismissals, setDismissals] = useState<Dismissal[]>([])
+  const [favorites, setFavorites] = useState<FavoriteMovie[]>(() => {
+    try {
+      const stored = localStorage.getItem("watchcom_favorites")
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Persist favorites to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("watchcom_favorites", JSON.stringify(favorites))
+    } catch (e) {
+      console.error("Failed to persist favorites:", e)
+    }
+  }, [favorites])
 
   useEffect(() => {
     setRatings([
@@ -68,6 +103,21 @@ export function UserTasteProvider({ children }: { children: React.ReactNode }) {
     return dismissals.some(d => d.movieId === movieId)
   }, [dismissals])
 
+  const addFavorite = useCallback((movie: FavoriteMovie) => {
+    setFavorites(prev => {
+      if (prev.some(f => f.id === movie.id)) return prev
+      return [...prev, movie]
+    })
+  }, [])
+
+  const removeFavorite = useCallback((movieId: string) => {
+    setFavorites(prev => prev.filter(f => f.id !== movieId))
+  }, [])
+
+  const isFavorite = useCallback((movieId: string) => {
+    return favorites.some(f => f.id === movieId)
+  }, [favorites])
+
   // Calculate dynamic metrics
   const metrics = useMemo(() => {
     const totalRated = ratings.length
@@ -100,12 +150,16 @@ export function UserTasteProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(() => ({
     ratings,
     dismissals,
+    favorites,
     rateMovie,
     dismissMovie,
     getRatingForMovie,
     isDismissed,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
     metrics
-  }), [ratings, dismissals, rateMovie, dismissMovie, getRatingForMovie, isDismissed, metrics])
+  }), [ratings, dismissals, favorites, rateMovie, dismissMovie, getRatingForMovie, isDismissed, addFavorite, removeFavorite, isFavorite, metrics])
 
   return (
     <UserTasteContext.Provider value={value}>

@@ -1,7 +1,7 @@
 import React, { useRef } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Star, Eye, EyeOff, Clock } from "lucide-react"
+import { Star, Eye, EyeOff, Clock, Heart } from "lucide-react"
 import { useTaste } from "../../context/UserTasteContext"
 import { LazyImage } from "../ui/LazyImage"
 
@@ -24,7 +24,7 @@ type MovieCardProps = {
 }
 
 export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showActions = false }: MovieCardProps) {
-  const { isDismissed, getRatingForMovie, dismissMovie } = useTaste()
+  const { isDismissed, getRatingForMovie, dismissMovie, addFavorite, removeFavorite, isFavorite } = useTaste()
   const cardRef = useRef<HTMLDivElement>(null)
 
   if (isDismissed(movie.id)) {
@@ -32,6 +32,7 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
   }
 
   const userRating = getRatingForMovie(movie.id)
+  const favActive = isFavorite(movie.id)
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = cardRef.current
@@ -119,6 +120,36 @@ export const MovieCard = React.memo(function MovieCard({ movie, idx = 0, showAct
               {userRating}
             </div>
           )}
+
+          {/* Favorites Heart Icon */}
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (favActive) {
+                removeFavorite(movie.id)
+              } else {
+                addFavorite({
+                  id: movie.id,
+                  title: movie.title,
+                  year: movie.year,
+                  posterUrl: movie.posterUrl,
+                  rating: movie.rating,
+                  genres: movie.genres,
+                  matchScore: movie.matchScore,
+                  runtime: movie.runtime,
+                  confidence: movie.confidence,
+                  reason: movie.reason,
+                  tags: movie.tags
+                })
+              }
+            }}
+            className="absolute bottom-3 right-3 z-30 p-2.5 bg-black/60 hover:bg-black/90 backdrop-blur-md rounded-full border border-white/10 hover:border-red-500/40 text-gray-400 hover:text-red-500 transition-all cursor-pointer shadow-lg active:scale-90 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227]"
+            title={favActive ? "Remove from Saved" : "Save Movie"}
+            aria-label={favActive ? `Remove ${movie.title} from saved` : `Save ${movie.title}`}
+          >
+            <Heart className={`h-4.5 w-4.5 transition-colors ${favActive ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
+          </button>
         </div>
       </Link>
       

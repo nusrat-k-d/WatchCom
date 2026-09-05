@@ -19,7 +19,8 @@ export function Navbar() {
 
   const navLinks = [
     { name: "✨ AI Assistant", path: "/discover" },
-    { name: "🔥 Trending", path: "/trending" }
+    { name: "🔥 Trending", path: "/trending" },
+    { name: "❤️ Saved", path: "/saved" }
   ]
 
   const getDesktopClass = (path: string) => {
