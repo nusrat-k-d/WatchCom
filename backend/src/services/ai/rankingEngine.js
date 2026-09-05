@@ -127,9 +127,30 @@ const calculateScore = (movie, intent, refMovieGenreIds) => {
 
   // Rule 6: Avoid list filtering (heavily penalize matching avoid items: -100 points)
   if (intent && intent.avoid && intent.avoid.length > 0) {
+    const avoidExpansions = {
+      'jump scares': ['jump scare', 'horror', 'haunting', 'demon', 'slasher', 'terror', 'creepy', 'paranormal'],
+      'sad endings': ['tragic', 'tragedy', 'death', 'grief', 'terminal', 'depressing', 'sorrow', 'fatal'],
+      'depressing': ['depressing', 'bleak', 'misery', 'hopeless', 'grief', 'tragic'],
+      'gore': ['gore', 'bloody', 'mutilation', 'torture', 'cannibal', 'brutal', 'slaughter'],
+      'slow pacing': ['slow-burn', 'slow pacing', 'deliberate', 'meditative', 'slow paced'],
+      'open endings': ['unresolved', 'ambiguous', 'open-ended', 'cliffhanger']
+    };
+
     for (const avoidWord of intent.avoid) {
-      if (avoidWord && (overview.includes(avoidWord.toLowerCase()) || title.includes(avoidWord.toLowerCase()))) {
+      if (!avoidWord) continue;
+      const lowerAvoid = avoidWord.toLowerCase();
+      
+      // Direct word match
+      if (overview.includes(lowerAvoid) || title.includes(lowerAvoid)) {
         score -= 100;
+      }
+
+      // Check expanded keywords
+      const synonyms = avoidExpansions[lowerAvoid] || [];
+      for (const syn of synonyms) {
+        if (overview.includes(syn) || title.includes(syn)) {
+          score -= 90;
+        }
       }
     }
   }

@@ -66,6 +66,14 @@ interface ExtractedIntent {
   confidence: number
 }
 
+const DEALBREAKERS = [
+  { id: "jump scares", label: "🚫 No Jump Scares" },
+  { id: "sad endings", label: "🚫 No Sad Endings" },
+  { id: "open endings", label: "🚫 No Open Endings" },
+  { id: "gore", label: "🚫 No Gore" },
+  { id: "slow pacing", label: "🚫 No Slow Pacing" }
+]
+
 export function AiResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get("q") || ""
@@ -73,6 +81,7 @@ export function AiResultsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadingStep, setLoadingStep] = useState(0)
   const [results, setResults] = useState<Movie[]>([])
+  const [activeDealbreakers, setActiveDealbreakers] = useState<string[]>([])
   const [intent, setIntent] = useState<ExtractedIntent | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isFocused, setIsFocused] = useState(false)
@@ -87,6 +96,21 @@ export function AiResultsPage() {
       item.toLowerCase() !== debouncedSearchInput.toLowerCase()
     )
   }, [debouncedSearchInput])
+
+  const displayedResults = useMemo(() => {
+    if (activeDealbreakers.length === 0) return results
+    return results.filter(movie => {
+      const text = `${movie.title} ${movie.reason || ""} ${movie.genres?.join(" ") || ""} ${movie.tags?.join(" ") || ""}`.toLowerCase()
+      for (const d of activeDealbreakers) {
+        if (d === "jump scares" && (text.includes("horror") || text.includes("scare") || text.includes("creepy") || text.includes("ghost"))) return false
+        if (d === "sad endings" && (text.includes("tragic") || text.includes("death") || text.includes("sad") || text.includes("grief") || text.includes("tragedy"))) return false
+        if (d === "gore" && (text.includes("gore") || text.includes("bloody") || text.includes("violent") || text.includes("slasher"))) return false
+        if (d === "slow pacing" && text.includes("slow")) return false
+        if (d === "open endings" && (text.includes("unresolved") || text.includes("ambiguous"))) return false
+      }
+      return true
+    })
+  }, [results, activeDealbreakers])
 
   const loadingStages = [
     "Understanding your request...",
@@ -606,16 +630,45 @@ export function AiResultsPage() {
 
               {/* Movie Matches Grid */}
               <div className="space-y-6">
-                <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                  <h3 className="text-lg font-serif font-bold text-white flex items-center gap-2">
-                    <Sparkles className="h-4.5 w-4.5 text-[var(--color-gold)]" />
-                    AI Direct Matches
-                  </h3>
-                  <span className="text-xs text-[var(--color-text-secondary)]">Semantic search completed</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                  <div>
+                    <h3 className="text-lg font-serif font-bold text-white flex items-center gap-2">
+                      <Sparkles className="h-4.5 w-4.5 text-[var(--color-gold)]" />
+                      AI Direct Matches
+                    </h3>
+                    <span className="text-xs text-[var(--color-text-secondary)]">Showing {displayedResults.length} tailored recommendations</span>
+                  </div>
+
+                  {/* Anti-Trope / Dealbreaker Filter Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 font-mono shrink-0 mr-1">
+                      Exclude:
+                    </span>
+                    {DEALBREAKERS.map((d) => {
+                      const active = activeDealbreakers.includes(d.id)
+                      return (
+                        <button
+                          key={d.id}
+                          onClick={() => {
+                            setActiveDealbreakers(prev =>
+                              prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id]
+                            )
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 cursor-pointer ${
+                            active
+                              ? "bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm shadow-red-500/10"
+                              : "bg-white/[0.03] text-gray-400 hover:text-white border border-white/5 hover:border-white/15"
+                          }`}
+                        >
+                          {d.label}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                  {results.map((movie, idx) => (
+                  {displayedResults.map((movie, idx) => (
                     <MovieCard key={movie.id} movie={movie} idx={idx} />
                   ))}
                 </div>
