@@ -12,9 +12,6 @@ const ActorPage = lazy(() => import("./pages/ActorPage").then(m => ({ default: m
 const DirectorPage = lazy(() => import("./pages/DirectorPage").then(m => ({ default: m.DirectorPage })))
 const PersonPage = lazy(() => import("./pages/PersonPage").then(m => ({ default: m.PersonPage })))
 const SavedMoviesPage = lazy(() => import("./pages/SavedMoviesPage").then(m => ({ default: m.SavedMoviesPage })))
-const CouplesMatchPage = lazy(() => import("./pages/CouplesMatchPage").then(m => ({ default: m.CouplesMatchPage })))
-const TasteDnaPage = lazy(() => import("./pages/TasteDnaPage").then(m => ({ default: m.TasteDnaPage })))
-const MarathonPage = lazy(() => import("./pages/MarathonPage").then(m => ({ default: m.MarathonPage })))
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(m => ({ default: m.NotFoundPage })))
 
 // Premium Page-wide Skeleton Fallback
@@ -43,7 +40,6 @@ function App() {
             <Route element={<MainLayout />}>
               <Route path="/" element={<DiscoverPage />} />
               <Route path="/discover" element={<DiscoverPage />} />
-              <Route path="/marathon" element={<MarathonPage />} />
               <Route path="/trending" element={<TrendingPage />} />
               <Route path="/ai-results" element={<AiResultsPage />} />
               <Route path="/movie/:id" element={<MovieDetailsPage />} />
@@ -51,8 +47,6 @@ function App() {
               <Route path="/director/:id" element={<DirectorPage />} />
               <Route path="/person/:id" element={<PersonPage />} />
               <Route path="/saved" element={<SavedMoviesPage />} />
-              <Route path="/couples-match" element={<CouplesMatchPage />} />
-              <Route path="/taste-dna" element={<TasteDnaPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

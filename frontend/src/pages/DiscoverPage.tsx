@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Brain, Sparkles, Clock, ArrowUpRight, Dices } from "lucide-react"
+import { Search, Brain, Sparkles, Clock, ArrowUpRight } from "lucide-react"
 import { useDebounce } from "../lib/useDebounce"
-import { DecisionRouletteModal } from "../components/movies/DecisionRouletteModal"
 
 const AUTOCOMPLETE_SUGGESTIONS = [
   "Interstellar",
@@ -65,7 +64,6 @@ export function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isFocused, setIsFocused] = useState(false)
   const [placeholderIdx, setPlaceholderIdx] = useState(0)
-  const [isRouletteOpen, setIsRouletteOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // 1. Search History Hook (localStorage)
@@ -264,34 +262,17 @@ export function DiscoverPage() {
             </form>
           </motion.div>
 
-          {/* Quick Action Badges */}
+          {/* Category subtitle */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-            className="flex flex-wrap justify-center items-center gap-3 mb-6"
+            className="mb-6"
           >
-            <button
-              onClick={() => setIsRouletteOpen(true)}
-              className="px-4.5 py-2.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500/15 via-[#C9A227]/20 to-pink-500/15 border border-[#C9A227]/40 text-[#C9A227] hover:bg-[#C9A227]/25 hover:border-[#C9A227] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#C9A227]/10 flex items-center gap-2 cursor-pointer font-sans"
-            >
-              <Dices className="w-4 h-4 text-amber-400 animate-spin-slow" />
-              <span>🎲 30-Sec Roulette</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/marathon")}
-              className="px-4.5 py-2.5 rounded-full text-xs font-bold bg-white/5 border border-white/10 text-gray-200 hover:text-[#C9A227] hover:border-[#C9A227]/40 hover:bg-[#C9A227]/10 hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-2 cursor-pointer font-sans"
-            >
-              <Sparkles className="w-4 h-4 text-[#C9A227]" />
-              <span>🍿 Marathon Architect</span>
-            </button>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 font-mono select-none">
+              Explore by cinematic concept
+            </span>
           </motion.div>
-
-          <DecisionRouletteModal
-            isOpen={isRouletteOpen}
-            onClose={() => setIsRouletteOpen(false)}
-          />
 
           {/* Interactive prompt suggestion chips */}
           <motion.div

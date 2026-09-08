@@ -18,10 +18,7 @@ export function Navbar() {
   }, [])
 
   const navLinks = [
-    { name: "✨ AI Assistant", path: "/discover" },
-    { name: "🍿 Marathon", path: "/marathon" },
-    { name: "👥 Couples Match", path: "/couples-match" },
-    { name: "🧬 Taste DNA", path: "/taste-dna" },
+    { name: "✨ Discover", path: "/discover" },
     { name: "🔥 Trending", path: "/trending" },
     { name: "❤️ Saved", path: "/saved" }
   ]
