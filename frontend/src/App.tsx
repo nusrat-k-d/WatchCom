@@ -14,6 +14,7 @@ const PersonPage = lazy(() => import("./pages/PersonPage").then(m => ({ default:
 const SavedMoviesPage = lazy(() => import("./pages/SavedMoviesPage").then(m => ({ default: m.SavedMoviesPage })))
 const CouplesMatchPage = lazy(() => import("./pages/CouplesMatchPage").then(m => ({ default: m.CouplesMatchPage })))
 const TasteDnaPage = lazy(() => import("./pages/TasteDnaPage").then(m => ({ default: m.TasteDnaPage })))
+const MarathonPage = lazy(() => import("./pages/MarathonPage").then(m => ({ default: m.MarathonPage })))
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then(m => ({ default: m.NotFoundPage })))
 
 // Premium Page-wide Skeleton Fallback
@@ -42,6 +43,7 @@ function App() {
             <Route element={<MainLayout />}>
               <Route path="/" element={<DiscoverPage />} />
               <Route path="/discover" element={<DiscoverPage />} />
+              <Route path="/marathon" element={<MarathonPage />} />
               <Route path="/trending" element={<TrendingPage />} />
               <Route path="/ai-results" element={<AiResultsPage />} />
               <Route path="/movie/:id" element={<MovieDetailsPage />} />
