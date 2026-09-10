@@ -50,7 +50,7 @@ export function PersonHero({ person }: PersonHeroProps) {
     const rotateX = -mouseY / (height / 16)
     const rotateY = mouseX / (width / 16)
     
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`
   }
 
   const handleMouseLeave = () => {
@@ -63,17 +63,18 @@ export function PersonHero({ person }: PersonHeroProps) {
   const roleLabel = person.known_for_department === "Directing" ? "Director" : "Actor"
 
   return (
-    <div className="relative w-full border-b border-white/5 bg-gradient-to-b from-[#0e0e10] to-[#050505] pt-8 pb-12">
+    <div className="relative w-full border-b border-white/[0.06] bg-gradient-to-b from-[#09090c] to-[#060607] pt-24 md:pt-28 pb-12">
       {/* Background decoration */}
-      <div className="absolute top-[20%] right-[10%] w-[350px] h-[350px] bg-[radial-gradient(circle_at_center,rgba(201,162,39,0.02),transparent_70%)] pointer-events-none z-0 blur-[60px]" />
+      <div className="absolute top-[20%] right-[10%] w-[350px] h-[350px] bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.03),transparent_70%)] pointer-events-none z-0 blur-[60px]" />
       
-      <div className="container mx-auto px-4 md:px-8 max-w-5xl relative z-10 text-left">
+      <div className="container mx-auto px-6 md:px-10 max-w-6xl relative z-10 text-left">
         {/* Back navigation */}
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-[#C9A227] transition-colors mb-8 group cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227] rounded-md px-2 py-1"
+          className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-zinc-400 hover:text-[#C5A059] transition-colors mb-8 group cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059] rounded-md px-2 py-1"
+          aria-label="Go back to previous page"
         >
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" />
           Back
         </button>
 
@@ -90,7 +91,7 @@ export function PersonHero({ person }: PersonHeroProps) {
               transition: "transform 0.15s cubic-bezier(0.25, 1, 0.5, 1)",
               willChange: "transform"
             }}
-            className="w-48 h-72 md:w-64 md:h-96 rounded-2xl overflow-hidden border border-white/5 bg-[#0b0b0c] shadow-2xl shrink-0 group hover:border-[#C9A227]/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.7),0_0_25px_rgba(201,162,39,0.15)] transition-all duration-500 relative"
+            className="w-48 h-72 md:w-64 md:h-96 rounded-2xl overflow-hidden border border-white/[0.08] bg-[#09090c] shadow-2xl shrink-0 group hover:border-[#C5A059]/30 transition-all duration-500 relative"
           >
             {/* Glare effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -105,36 +106,36 @@ export function PersonHero({ person }: PersonHeroProps) {
           {/* Person Info */}
           <div className="flex-1 space-y-6 pt-2">
             <div className="space-y-2">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-[#C9A227] uppercase">
-                {roleLabel} • {person.known_for_department}
+              <span className="text-[10px] font-mono font-medium tracking-[0.25em] text-[#C5A059] uppercase">
+                ✦ {roleLabel} • {person.known_for_department}
               </span>
-              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight uppercase tracking-tight">
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-[#F0EDE6] leading-tight tracking-tight">
                 {person.name}
               </h1>
             </div>
 
             {/* Metadata fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-sans font-light text-gray-400">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-sans font-light text-zinc-300">
               {/* Born */}
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/5 rounded-lg border border-white/5">
-                  <Calendar className="h-4 w-4 text-gray-400" />
+                <div className="p-2 bg-white/[0.04] rounded-lg border border-white/[0.06]">
+                  <Calendar className="h-4 w-4 text-zinc-400" />
                 </div>
                 <div>
-                  <div className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider">Born</div>
-                  <div>{formatDate(person.birthday)}</div>
+                  <div className="text-[10px] text-zinc-500 font-mono uppercase font-medium tracking-wider">Born</div>
+                  <div className="text-xs text-zinc-300">{formatDate(person.birthday)}</div>
                 </div>
               </div>
 
               {/* Place of Birth */}
               {person.place_of_birth && (
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/5 rounded-lg border border-white/5">
-                    <MapPin className="h-4 w-4 text-gray-400" />
+                  <div className="p-2 bg-white/[0.04] rounded-lg border border-white/[0.06]">
+                    <MapPin className="h-4 w-4 text-zinc-400" />
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider">Place of Birth</div>
-                    <div className="truncate max-w-[200px]" title={person.place_of_birth}>
+                    <div className="text-[10px] text-zinc-500 font-mono uppercase font-medium tracking-wider">Place of Birth</div>
+                    <div className="text-xs text-zinc-300 truncate max-w-[200px]" title={person.place_of_birth}>
                       {person.place_of_birth}
                     </div>
                   </div>
@@ -143,14 +144,14 @@ export function PersonHero({ person }: PersonHeroProps) {
 
               {/* Popularity */}
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/5 rounded-lg border border-white/5">
-                  <Heart className="h-4 w-4 text-[#C9A227] fill-[#C9A227]/20" />
+                <div className="p-2 bg-white/[0.04] rounded-lg border border-white/[0.06]">
+                  <Heart className="h-4 w-4 text-[#C5A059] fill-[#C5A059]/20" />
                 </div>
                 <div>
-                  <div className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider">Popularity Score</div>
+                  <div className="text-[10px] text-zinc-500 font-mono uppercase font-medium tracking-wider">Popularity Score</div>
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-white">{person.popularity.toFixed(1)}</span>
-                    <span className="text-[10px] text-gray-600">points</span>
+                    <span className="text-xs font-semibold text-zinc-200">{person.popularity.toFixed(1)}</span>
+                    <span className="text-[10px] text-zinc-500">points</span>
                   </div>
                 </div>
               </div>
@@ -158,17 +159,17 @@ export function PersonHero({ person }: PersonHeroProps) {
               {/* Homepage (if available) */}
               {person.homepage && (
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/5 rounded-lg border border-white/5">
-                    <Globe className="h-4 w-4 text-gray-400" />
+                  <div className="p-2 bg-white/[0.04] rounded-lg border border-white/[0.06]">
+                    <Globe className="h-4 w-4 text-zinc-400" />
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider">Official Website</div>
+                    <div className="text-[10px] text-zinc-500 font-mono uppercase font-medium tracking-wider">Official Website</div>
                     <div>
                       <a
                         href={person.homepage}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#C9A227] hover:underline truncate max-w-[200px] block"
+                        className="text-xs text-[#C5A059] hover:underline truncate max-w-[200px] block"
                         title={person.homepage}
                       >
                         Visit site
@@ -181,12 +182,12 @@ export function PersonHero({ person }: PersonHeroProps) {
               {/* Died (if applicable) */}
               {person.deathday && (
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/5 rounded-lg border border-white/5">
-                    <Calendar className="h-4 w-4 text-red-400" />
+                  <div className="p-2 bg-white/[0.04] rounded-lg border border-white/[0.06]">
+                    <Calendar className="h-4 w-4 text-rose-400" />
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 font-mono uppercase font-bold tracking-wider">Died</div>
-                    <div>{formatDate(person.deathday)}</div>
+                    <div className="text-[10px] text-zinc-500 font-mono uppercase font-medium tracking-wider">Died</div>
+                    <div className="text-xs text-zinc-300">{formatDate(person.deathday)}</div>
                   </div>
                 </div>
               )}

@@ -78,39 +78,38 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
   }
 
   return (
-    <section className="relative min-h-[90vh] md:h-[95vh] flex items-end pt-24 pb-16 overflow-hidden border-b border-white/5 bg-[#050505]">
+    <section className="relative min-h-[90vh] md:h-[95vh] flex items-end pt-28 md:pt-32 pb-16 overflow-hidden border-b border-white/[0.06] bg-[#060607]">
       {/* 1. Cinematic Parallax Backdrop with Blur Mask */}
       <div className="absolute inset-0 z-0">
         <LazyImage 
           src={backdropUrl} 
           alt={`${movieDetails.title} Backdrop`} 
-          className="w-full h-full object-cover object-top opacity-55 scale-[1.03]"
+          className="w-full h-full object-cover object-top opacity-40 scale-[1.02]"
         />
         {/* Subtle Vignette & Dark Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/50 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/20 to-transparent z-10" />
-        <div className="absolute inset-0 bg-black/5 backdrop-blur-[0.5px] z-0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#060607] via-[#060607]/60 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#060607] via-[#060607]/30 to-transparent z-10" />
       </div>
 
-      <div className="container mx-auto px-4 md:px-8 relative z-20 w-full">
+      <div className="container mx-auto px-6 md:px-10 max-w-6xl relative z-20 w-full">
         {/* Back navigation */}
         <button 
           onClick={() => navigate(-1)} 
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-[#C9A227] transition-colors mb-8 group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227]"
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-mono font-medium text-zinc-400 hover:text-[#C5A059] transition-colors mb-8 group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059] rounded px-2 py-1"
           aria-label="Go back to previous page"
         >
-          <ChevronLeft className="h-4.5 w-4.5 group-hover:-translate-x-1 transition-transform" />
+          <ChevronLeft className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" />
           Back
         </button>
 
-        <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-end text-center lg:text-left">
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-center lg:items-end text-center lg:text-left">
           
           {/* 2. Floating Movie Poster with 3D Physics */}
           <motion.div 
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            initial={{ opacity: 0, y: 30, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-48 sm:w-60 md:w-72 shrink-0 select-none group"
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="w-44 sm:w-56 md:w-64 shrink-0 select-none group"
           >
             <div
               ref={posterRef}
@@ -122,9 +121,9 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
                 transition: "transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
                 willChange: "transform"
               }}
-              className="rounded-3xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.9)] border border-white/10 bg-[#0b0b0c] relative cursor-pointer"
+              className="rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.95)] border border-white/[0.08] bg-[#09090c] relative cursor-pointer"
             >
-              <LazyImage src={posterUrl} alt={movieDetails.title} className="w-full h-auto object-cover aspect-[2/3] scale-101 group-hover:scale-102 transition-transform duration-700" />
+              <LazyImage src={posterUrl} alt={movieDetails.title} className="w-full h-auto object-cover aspect-[2/3] group-hover:scale-102 transition-transform duration-700" />
             </div>
           </motion.div>
 
@@ -133,23 +132,23 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
             
             {/* Badges (Ratings, Match score) */}
             <motion.div 
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="flex flex-wrap justify-center lg:justify-start items-center gap-3.5 mb-5"
+              transition={{ duration: 0.5 }}
+              className="flex flex-wrap justify-center lg:justify-start items-center gap-2.5 mb-4"
             >
-              <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-xs font-bold text-[#C9A227] tracking-wider">
-                <Star className="h-4 w-4 fill-[#C9A227] text-[#C9A227]" />
+              <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/[0.08] text-xs font-mono font-medium text-[#C5A059]">
+                <Star className="h-3.5 w-3.5 fill-[#C5A059] text-[#C5A059]" />
                 {(movieDetails.vote_average ? movieDetails.vote_average / 2 : 0).toFixed(1)} / 5
               </div>
               
               {matchScore !== null && (
                 <button 
                   onClick={() => setShowMatchExplain(!showMatchExplain)}
-                  className="bg-[#C9A227]/10 text-[#C9A227] hover:bg-[#C9A227]/20 px-4 py-2 rounded-full border border-[#C9A227]/20 text-xs font-bold cursor-pointer transition-colors flex items-center gap-2 tracking-wider focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227]"
+                  className="bg-[#C5A059]/10 text-[#C5A059] hover:bg-[#C5A059]/20 px-3.5 py-1.5 rounded-full border border-[#C5A059]/25 text-xs font-mono font-medium cursor-pointer transition-colors flex items-center gap-1.5 tracking-wider focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059]"
                   aria-label="View AI match explanation"
                 >
-                  {matchScore}% Match <Info className="h-3.5 w-3.5" />
+                  {matchScore}% Match <Info className="h-3 w-3" />
                 </button>
               )}
             </motion.div>
@@ -158,17 +157,17 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
             <AnimatePresence>
               {showMatchExplain && matchScore !== null && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10, height: 0 }}
+                  initial={{ opacity: 0, y: 8, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
-                  exit={{ opacity: 0, y: 10, height: 0 }}
-                  className="overflow-hidden w-full max-w-lg mb-6"
+                  exit={{ opacity: 0, y: 8, height: 0 }}
+                  className="overflow-hidden w-full max-w-lg mb-5"
                 >
-                  <div className="bg-[#0b0b0c]/95 backdrop-blur-2xl border border-[#C9A227]/25 p-5 rounded-2xl flex flex-col gap-2.5 text-left shadow-2xl">
-                    <h4 className="text-xs text-[#C9A227] uppercase font-bold tracking-widest flex items-center gap-1.5 font-mono">
-                      <Brain className="h-3.5 w-3.5" /> AI Intent Alignment
+                  <div className="bg-[#09090c]/95 backdrop-blur-2xl border border-[#C5A059]/30 p-4.5 rounded-2xl flex flex-col gap-2 text-left shadow-2xl">
+                    <h4 className="text-[10px] text-[#C5A059] uppercase font-bold tracking-widest flex items-center gap-1.5 font-mono">
+                      <Brain className="h-3 w-3" /> AI Intent Alignment
                     </h4>
-                    <p className="text-xs text-gray-300 font-light leading-relaxed">
-                      WatchCom calculated this match vector based on your interest patterns in {movieDetails.genres?.[0]?.name || "this genre"}. It aligns with your affinity for {aiData.moodTags.slice(0, 2).join(" & ")} storytelling.
+                    <p className="text-xs text-zinc-300 font-light leading-relaxed">
+                      WatchCom calculated this match vector based on your interest in {movieDetails.genres?.[0]?.name || "cinema"}, matching affinity for {aiData.moodTags.slice(0, 2).join(" & ")} aesthetics.
                     </p>
                   </div>
                 </motion.div>
@@ -177,10 +176,10 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
 
             {/* Movie Title */}
             <motion.h1 
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-serif text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-4 text-white leading-none uppercase"
+              transition={{ duration: 0.5, delay: 0.08 }}
+              className="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight mb-3 text-[#F0EDE6] leading-tight"
             >
               {movieDetails.title}
             </motion.h1>
@@ -188,10 +187,10 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
             {/* Tagline */}
             {movieDetails.tagline && (
               <motion.p
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="text-lg sm:text-2xl italic text-[#C9A227]/85 mb-6 font-light max-w-2xl font-serif"
+                transition={{ duration: 0.5, delay: 0.12 }}
+                className="text-base sm:text-xl italic text-[#C5A059]/90 mb-5 font-light max-w-2xl font-serif"
               >
                 "{movieDetails.tagline}"
               </motion.p>
@@ -199,32 +198,32 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
 
             {/* Inline metadata details */}
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-wrap justify-center lg:justify-start items-center gap-x-5 gap-y-2.5 text-sm text-gray-400 mb-8 font-light"
+              transition={{ duration: 0.5, delay: 0.16 }}
+              className="flex flex-wrap justify-center lg:justify-start items-center gap-x-4 gap-y-2 text-xs text-zinc-400 mb-6 font-light"
             >
-              <div className="flex items-center gap-1.5"><Calendar className="h-4 w-4 text-gray-500" /> {releaseYear}</div>
-              <span>•</span>
-              <div className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-gray-500" /> {movieDetails.runtime ? `${movieDetails.runtime} min` : "N/A"}</div>
-              <span>•</span>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-zinc-500" /> {releaseYear}</div>
+              <span className="text-zinc-600">•</span>
+              <div className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-zinc-500" /> {movieDetails.runtime ? `${movieDetails.runtime} min` : "N/A"}</div>
+              <span className="text-zinc-600">•</span>
+              <div className="flex flex-wrap gap-1.5">
                 {movieDetails.genres?.map((g) => (
-                  <span key={g.id} className="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-xs text-white font-medium">{g.name}</span>
+                  <span key={g.id} className="px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] text-zinc-300 font-mono">{g.name}</span>
                 ))}
               </div>
             </motion.div>
 
             {/* Action Grid (Rating + Trailer) */}
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto"
             >
               {/* Rating Star Actions */}
-              <div className="bg-[#0c0c0d]/90 backdrop-blur-xl border border-white/5 px-5 py-3 rounded-2xl flex items-center justify-between sm:justify-start gap-5 w-full sm:w-auto shadow-xl hover:border-white/10 transition-colors duration-300">
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">Your Score</span>
+              <div className="bg-[#09090c]/90 backdrop-blur-xl border border-white/[0.08] px-4 py-2.5 rounded-xl flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto shadow-xl">
+                <span className="text-[9px] font-medium text-zinc-500 uppercase tracking-widest font-mono">Rate Film</span>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -232,11 +231,11 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
                       onClick={() => rateMovie(movieIdStr, star)}
                       onMouseEnter={() => setHoverRating(star)}
                       onMouseLeave={() => setHoverRating(null)}
-                      className="text-white hover:text-[#C9A227] transition-colors focus:outline-none cursor-pointer focus-visible:ring-1 focus-visible:ring-[#C9A227]"
+                      className="text-white hover:text-[#C5A059] transition-colors focus:outline-none cursor-pointer focus-visible:ring-1 focus-visible:ring-[#C5A059]"
                       aria-label={`Rate this movie ${star} stars out of 5`}
                     >
                       <Star 
-                        className={`h-6.5 w-6.5 ${(hoverRating || userRating || 0) >= star ? "fill-[#C9A227] text-[#C9A227] scale-110" : "text-gray-700"} transition-all duration-200`} 
+                        className={`h-5 w-5 ${(hoverRating || userRating || 0) >= star ? "fill-[#C5A059] text-[#C5A059] scale-105" : "text-zinc-700"} transition-all duration-150`} 
                       />
                     </button>
                   ))}
@@ -244,33 +243,33 @@ export function HeroSection({ movieDetails, aiData, matchScore, trailerUrl }: He
               </div>
 
               {/* Large Premium Gold Trailer Button */}
-              <TrailerButton trailerUrl={trailerUrl} movieTitle={movieDetails.title} />
+              <TrailerButton movieId={movieDetails.id} movieTitle={movieDetails.title} trailerUrl={trailerUrl} />
             </motion.div>
 
             {/* Editorial Stats Grid */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="grid grid-cols-3 gap-6 max-w-md w-full border-t border-white/5 mt-10 pt-6 text-left"
+              transition={{ duration: 0.6, delay: 0.25 }}
+              className="grid grid-cols-3 gap-6 max-w-md w-full border-t border-white/[0.06] mt-8 pt-5 text-left"
             >
-              <div className="space-y-1">
-                <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest font-mono flex items-center gap-1">
+              <div className="space-y-0.5">
+                <div className="text-[9px] text-zinc-500 font-medium uppercase tracking-widest font-mono flex items-center gap-1">
                   <Globe className="h-3 w-3" /> Language
                 </div>
-                <div className="text-sm font-semibold text-white uppercase">{movieDetails.original_language || "en"}</div>
+                <div className="text-xs font-medium text-zinc-300 uppercase">{movieDetails.original_language || "en"}</div>
               </div>
-              <div className="space-y-1">
-                <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest font-mono flex items-center gap-1">
+              <div className="space-y-0.5">
+                <div className="text-[9px] text-zinc-500 font-medium uppercase tracking-widest font-mono flex items-center gap-1">
                   <BarChart3 className="h-3 w-3" /> Popularity
                 </div>
-                <div className="text-sm font-semibold text-white">{movieDetails.popularity ? Math.round(movieDetails.popularity).toLocaleString() : "N/A"}</div>
+                <div className="text-xs font-medium text-zinc-300">{movieDetails.popularity ? Math.round(movieDetails.popularity).toLocaleString() : "N/A"}</div>
               </div>
-              <div className="space-y-1">
-                <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest font-mono flex items-center gap-1">
+              <div className="space-y-0.5">
+                <div className="text-[9px] text-zinc-500 font-medium uppercase tracking-widest font-mono flex items-center gap-1">
                   <Users className="h-3 w-3" /> Votes
                 </div>
-                <div className="text-sm font-semibold text-white">{movieDetails.vote_count ? movieDetails.vote_count.toLocaleString() : "N/A"}</div>
+                <div className="text-xs font-medium text-zinc-300">{movieDetails.vote_count ? movieDetails.vote_count.toLocaleString() : "N/A"}</div>
               </div>
             </motion.div>
 

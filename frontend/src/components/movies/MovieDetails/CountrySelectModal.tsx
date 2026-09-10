@@ -9,8 +9,8 @@ interface Country {
 }
 
 export const COUNTRIES: Country[] = [
-  { code: "IN", name: "India", flag: "🇮🇳" },
   { code: "US", name: "United States", flag: "🇺🇸" },
+  { code: "IN", name: "India", flag: "🇮🇳" },
   { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
   { code: "CA", name: "Canada", flag: "🇨🇦" },
   { code: "AU", name: "Australia", flag: "🇦🇺" }
@@ -35,7 +35,7 @@ export function CountrySelectModal({ isOpen, onClose, onSelect }: CountrySelectM
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/85 backdrop-blur-md"
           />
 
           {/* Modal Container */}
@@ -43,26 +43,26 @@ export function CountrySelectModal({ isOpen, onClose, onSelect }: CountrySelectM
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-sm bg-[#0b0b0c] border border-white/10 rounded-[2rem] shadow-[0_30px_70px_rgba(0,0,0,0.8)] overflow-hidden relative z-10 p-8 flex flex-col items-center"
+            transition={{ duration: 0.25 }}
+            className="w-full max-w-sm bg-[#09090c] border border-white/[0.08] rounded-3xl shadow-[0_30px_70px_rgba(0,0,0,0.9)] overflow-hidden relative z-10 p-7 flex flex-col items-center"
           >
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 p-1.5 hover:bg-white/10 text-gray-500 hover:text-white rounded-full transition-colors cursor-pointer"
+              className="absolute top-5 right-5 p-1.5 hover:bg-white/[0.06] text-zinc-500 hover:text-white rounded-full transition-colors cursor-pointer"
               aria-label="Close dialog"
             >
               <X className="h-4 w-4" />
             </button>
 
             {/* Header */}
-            <div className="h-12 w-12 bg-[#C9A227]/10 border border-[#C9A227]/25 rounded-2xl flex items-center justify-center text-[#C9A227] mb-6">
+            <div className="h-10 w-10 bg-[#C5A059]/10 border border-[#C5A059]/20 rounded-xl flex items-center justify-center text-[#C5A059] mb-4">
               <Globe className="h-5 w-5" />
             </div>
 
-            <h3 className="text-xl font-serif font-bold text-white mb-2">Choose Your Region</h3>
-            <p className="text-xs text-gray-400 text-center mb-8 max-w-[240px] leading-relaxed">
-              Select your region to see streaming, rental, and purchasing options.
+            <h3 className="text-lg font-serif font-normal text-[#F0EDE6] mb-1">Select Streaming Region</h3>
+            <p className="text-xs text-zinc-400 text-center mb-6 max-w-[240px] font-light leading-relaxed">
+              Calibrate availability for streaming and purchase platforms.
             </p>
 
             {/* Countries List */}
@@ -74,10 +74,10 @@ export function CountrySelectModal({ isOpen, onClose, onSelect }: CountrySelectM
                     onSelect(country.code)
                     onClose()
                   }}
-                  className="w-full flex items-center gap-4 px-5 py-3.5 bg-white/5 border border-white/5 hover:border-[#C9A227]/20 hover:bg-[#C9A227]/5 rounded-2xl transition-all cursor-pointer group text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227]"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-white/[0.03] border border-white/[0.06] hover:border-[#C5A059]/30 hover:bg-white/[0.06] rounded-xl transition-all cursor-pointer group text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059]"
                 >
-                  <span className="text-2xl select-none">{country.flag}</span>
-                  <span className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">
+                  <span className="text-xl select-none">{country.flag}</span>
+                  <span className="text-xs font-medium text-zinc-300 group-hover:text-white transition-colors">
                     {country.name}
                   </span>
                 </button>

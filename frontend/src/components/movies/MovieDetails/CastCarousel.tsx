@@ -30,7 +30,7 @@ interface CastCardProps {
   isDirector?: boolean
 }
 
-// Interactive 3D tilt Card for Cast and Crew members with enhanced hover animations
+// Interactive 3D tilt Card for Cast and Crew members
 const CastCard = React.memo(function CastCard({ id, name, role, photoUrl, isDirector = false }: CastCardProps) {
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -43,11 +43,10 @@ const CastCard = React.memo(function CastCard({ id, name, role, photoUrl, isDire
     const mouseX = e.clientX - rect.left - width / 2
     const mouseY = e.clientY - rect.top - height / 2
     
-    // Limits tilt to ~12 degrees for smaller cards
     const rotateX = -mouseY / (height / 12)
     const rotateY = mouseX / (width / 12)
     
-    card.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`
+    card.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`
   }
 
   const handleMouseLeave = () => {
@@ -61,7 +60,7 @@ const CastCard = React.memo(function CastCard({ id, name, role, photoUrl, isDire
   return (
     <Link 
       to={toUrl}
-      className="flex flex-col items-center text-center shrink-0 w-36 snap-start group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A227] rounded-2xl p-1"
+      className="flex flex-col items-center text-center shrink-0 w-32 snap-start group cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C5A059] rounded-2xl p-1"
     >
       <div 
         ref={cardRef}
@@ -73,31 +72,28 @@ const CastCard = React.memo(function CastCard({ id, name, role, photoUrl, isDire
           transition: "transform 0.15s cubic-bezier(0.25, 1, 0.5, 1)",
           willChange: "transform"
         }}
-        className={`w-28 h-28 rounded-2xl overflow-hidden border bg-[#0b0b0c] mb-4 shadow-xl transition-all duration-500 relative ${
+        className={`w-24 h-24 rounded-2xl overflow-hidden border bg-[#09090c] mb-3 shadow-lg transition-all duration-500 relative ${
           isDirector 
-            ? "border-[#C9A227]/30 group-hover:border-[#C9A227] group-hover:shadow-[0_15px_30px_rgba(201,162,39,0.25),0_0_15px_rgba(201,162,39,0.2)]" 
-            : "border-white/5 group-hover:border-[#C9A227] group-hover:shadow-[0_15px_30px_rgba(0,0,0,0.9),0_0_20px_rgba(201,162,39,0.25)]"
+            ? "border-[#C5A059]/40 group-hover:border-[#C5A059]" 
+            : "border-white/[0.08] group-hover:border-[#C5A059]/40"
         }`}
       >
-        {/* Cursor glare effect */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.05] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
         {photoUrl ? (
           <LazyImage 
              src={photoUrl} 
              alt={name} 
-             className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-110" 
+             className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-105" 
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-black/60">
-            <Award className="h-9 w-9 text-[#C9A227] animate-pulse" />
+            <Award className="h-6 w-6 text-[#C5A059]" />
           </div>
         )}
       </div>
-      <span className="text-xs font-semibold text-white truncate w-full group-hover:text-[#C9A227] transition-colors duration-300">
+      <span className="text-xs font-medium text-[#F0EDE6] truncate w-full group-hover:text-[#C5A059] transition-colors duration-200">
         {name}
       </span>
-      <span className={`text-[10px] text-gray-500 truncate w-full mt-0.5 ${isDirector ? "uppercase font-bold tracking-wider font-mono" : "font-light"}`}>
+      <span className={`text-[10px] text-zinc-500 truncate w-full mt-0.5 ${isDirector ? "uppercase font-medium tracking-wider font-mono text-[#C5A059]" : "font-light"}`}>
         {role}
       </span>
     </Link>
@@ -111,26 +107,22 @@ export function CastCarousel({ cast, director }: CastCarouselProps) {
     <motion.section 
       initial={{ opacity: 0, y: 25 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="space-y-8 py-10 text-left w-full border-t border-white/5"
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="space-y-6 py-8 text-left w-full border-t border-white/[0.06]"
       aria-labelledby="cast-section-heading"
     >
-      <div className="flex items-center gap-3 pb-2">
-        <div className="p-2 bg-white/5 border border-white/10 rounded-lg">
-          <Users className="h-4 w-4 text-gray-400" />
+      <div className="flex items-center gap-2.5 pb-1">
+        <div className="p-1.5 bg-white/[0.04] border border-white/[0.06] rounded-lg text-[#C5A059]">
+          <Users className="h-4 w-4" />
         </div>
-        <h2 id="cast-section-heading" className="text-xs uppercase tracking-widest text-gray-400 font-bold font-mono">
-          🎭 Cast & Crew
+        <h2 id="cast-section-heading" className="text-[11px] uppercase tracking-[0.25em] text-zinc-400 font-medium font-mono">
+          ✦ Cast & Crew Ensemble
         </h2>
       </div>
 
       <div className="relative overflow-hidden w-full group/cast-carousel">
-        {/* Soft edge blur overlays (vignette effect) */}
-        <div className="absolute top-0 left-0 bottom-0 w-12 bg-gradient-to-r from-[#050505] to-transparent z-10 pointer-events-none opacity-0 group-hover/cast-carousel:opacity-100 transition-opacity duration-300" />
-        <div className="absolute top-0 right-0 bottom-0 w-12 bg-gradient-to-l from-[#050505] to-transparent z-10 pointer-events-none opacity-0 group-hover/cast-carousel:opacity-100 transition-opacity duration-300" />
-
-        <div className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-6 px-1 snap-x select-none">
+        <div className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1 snap-x select-none">
           
           {/* Director Card */}
           {director && (

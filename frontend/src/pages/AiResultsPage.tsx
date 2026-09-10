@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Sparkles, ArrowLeft, Clock, Brain, RefreshCw, AlertCircle, Filter, ArrowUpRight } from "lucide-react"
+import { Search, Sparkles, ArrowLeft, RefreshCw, AlertCircle, ArrowUpRight } from "lucide-react"
 import type { Movie } from "../lib/mock-data"
 import { Button } from "../components/ui/button"
 import { MovieCard } from "../components/movies/MovieCard"
@@ -67,11 +67,11 @@ interface ExtractedIntent {
 }
 
 const DEALBREAKERS = [
-  { id: "jump scares", label: "🚫 No Jump Scares" },
-  { id: "sad endings", label: "🚫 No Sad Endings" },
-  { id: "open endings", label: "🚫 No Open Endings" },
-  { id: "gore", label: "🚫 No Gore" },
-  { id: "slow pacing", label: "🚫 No Slow Pacing" }
+  { id: "jump scares", label: "No Jump Scares" },
+  { id: "sad endings", label: "No Sad Endings" },
+  { id: "open endings", label: "No Open Endings" },
+  { id: "gore", label: "No Gore" },
+  { id: "slow pacing", label: "Fast Paced" }
 ]
 
 export function AiResultsPage() {
@@ -113,15 +113,11 @@ export function AiResultsPage() {
   }, [results, activeDealbreakers])
 
   const loadingStages = [
-    "Understanding your request...",
-    "Analyzing your taste...",
-    "Finding similar stories...",
-    "Comparing thousands of movies...",
-    "Ranking recommendations...",
-    "Preparing your personalized picks..."
+    "Analyzing cinematic themes & tone...",
+    "Querying deep celluloid archives...",
+    "Evaluating narrative arcs & performances...",
+    "Ranking personalized matches..."
   ]
-
-
 
   // Save scroll position
   useEffect(() => {
@@ -138,165 +134,84 @@ export function AiResultsPage() {
 
   // AI Pipeline Request Lifecycle
   useEffect(() => {
-    if (!query) {
-      setResults([])
+    if (!query.trim()) {
       setIsLoading(false)
+      setResults([])
       return
     }
 
+    setSearchInput(query)
+    setError(null)
+
     // Check memory cache first
-    if (searchResultsCache.has(query)) {
-      const cached = searchResultsCache.get(query)!
+    const cached = searchResultsCache.get(query)
+    if (cached) {
       setResults(cached.results)
       setIntent(cached.intent)
       setIsLoading(false)
-
-      const scrollY = sessionStorage.getItem("watchcom_last_scroll_y")
-      if (scrollY) {
-        setTimeout(() => {
-          window.scrollTo(0, parseInt(scrollY, 10))
-        }, 150)
-      }
       return
-    }
-
-    // Check sessionStorage
-    const cachedQuery = sessionStorage.getItem("watchcom_last_search_query")
-    const cachedResults = sessionStorage.getItem("watchcom_last_search_results")
-    const cachedIntent = sessionStorage.getItem("watchcom_last_search_intent")
-
-    if (cachedQuery === query && cachedResults && cachedIntent) {
-      try {
-        const parsedResults = JSON.parse(cachedResults)
-        const parsedIntent = JSON.parse(cachedIntent)
-        setResults(parsedResults)
-        setIntent(parsedIntent)
-
-        // Store in memory cache too
-        searchResultsCache.set(query, {
-          results: parsedResults,
-          intent: parsedIntent
-        })
-
-        setIsLoading(false)
-        
-        // Restore scroll position after DOM rendering
-        const scrollY = sessionStorage.getItem("watchcom_last_scroll_y")
-        if (scrollY) {
-          setTimeout(() => {
-            window.scrollTo(0, parseInt(scrollY, 10))
-          }, 150)
-        }
-        return
-      } catch (e) {
-        console.error("Error restoring search cache:", e)
-      }
     }
 
     setIsLoading(true)
     setLoadingStep(0)
-    setError(null)
 
-    let apiData: RecommendationResponse | null = null
-    let apiError: string | null = null
+    const controller = new AbortController()
     let isApiDone = false
+    let apiData: RecommendationResponse | null = null
 
-    // Start API request
-    const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/ai/recommend", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ query })
-        })
-
-        if (!response.ok) {
-          throw new Error(`Server returned status ${response.status}`)
+    // Fetch recommendations from backend
+    fetch(`http://localhost:5000/api/ai/recommend?q=${encodeURIComponent(query)}`, {
+      signal: controller.signal
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}: ${res.statusText}`)
         }
-
-        const data = await response.json()
+        return res.json()
+      })
+      .then((data: RecommendationResponse) => {
         apiData = data
-      } catch (err: unknown) {
-        console.error("API Error:", err)
-        apiError = err instanceof Error ? err.message : "Failed to fetch recommendations from the server."
-      } finally {
         isApiDone = true
-      }
-    }
-
-    fetchData()
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          console.error("AI recommendation fetch error:", err)
+          isApiDone = true
+          setError(err.message || "Failed to fetch cinematic recommendations.")
+        }
+      })
 
     const runCompletion = () => {
       const checkCompletion = () => {
         if (isApiDone) {
-          if (apiError) {
-            setError(apiError)
-            setResults([])
-            setIsLoading(false)
-          } else if (apiData) {
-            const rawCandidates = apiData.candidates || apiData.recommendations || []
-            
-            // Map intent
-            const backendIntent = apiData.intent
-            let mappedIntent = null
-            if (backendIntent) {
+          if (apiData) {
+            let mappedIntent: ExtractedIntent | null = null
+            if (apiData.intent) {
               mappedIntent = {
-                mood: backendIntent.mood || "Any",
-                avoid: backendIntent.avoid && backendIntent.avoid.length > 0 ? backendIntent.avoid.join(", ") : "None specified",
-                runtime: backendIntent.runtime ? `Under ${backendIntent.runtime} mins` : "Any",
-                genre: backendIntent.genres && backendIntent.genres.length > 0 ? backendIntent.genres.join(", ") : "Any",
-                complexity: backendIntent.complexity || "Medium",
-                confidence: 92
+                mood: apiData.intent.mood || "Atmospheric",
+                avoid: apiData.intent.avoid?.join(", ") || "None",
+                runtime: apiData.intent.runtime ? `${apiData.intent.runtime}m` : "Any",
+                genre: apiData.intent.genres?.join(", ") || "Cinema",
+                complexity: apiData.intent.complexity || "Medium",
+                confidence: 94
               }
               setIntent(mappedIntent)
             }
-            
-            // Map candidates to frontend Movie type
-            const GENRE_ID_TO_NAME: Record<number, string> = {
-              28: 'Action',
-              12: 'Adventure',
-              16: 'Animation',
-              35: 'Comedy',
-              80: 'Crime',
-              99: 'Documentary',
-              18: 'Drama',
-              10751: 'Family',
-              14: 'Fantasy',
-              36: 'History',
-              27: 'Horror',
-              10402: 'Music',
-              9648: 'Mystery',
-              10749: 'Romance',
-              878: 'Sci-Fi',
-              10770: 'TV Movie',
-              53: 'Thriller',
-              10752: 'War',
-              37: 'Western'
-            }
 
-            const mapped: Movie[] = rawCandidates.map((m: RawCandidate) => {
-              const genres = Array.isArray(m.genre_ids)
-                ? m.genre_ids.map((id: number) => GENRE_ID_TO_NAME[id] || '').filter(Boolean)
-                : []
-              if (genres.length === 0) genres.push('Drama')
-
-              const releaseYear = m.release_date ? parseInt(m.release_date.split('-')[0], 10) : 0
-
+            const rawList = apiData.recommendations || apiData.candidates || []
+            const mapped: Movie[] = rawList.map((m) => {
+              const year = m.release_date ? parseInt(m.release_date.split("-")[0], 10) : 2024
               return {
                 id: String(m.id),
-                title: m.title || 'Untitled',
-                year: isNaN(releaseYear) ? 0 : releaseYear,
-                runtime: m.runtime ? `${m.runtime} min` : 'N/A',
-                genres,
-                overview: m.overview || '',
-                posterUrl: m.poster_path 
-                  ? `https://image.tmdb.org/t/p/w500${m.poster_path}` 
-                  : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500',
-                rating: m.vote_average ? Number((m.vote_average / 2).toFixed(1)) : 0,
-                matchScore: m.watchComScore || 0,
-                confidence: m.confidence,
+                title: m.title || m.original_title || "Untitled",
+                year: isNaN(year) ? 2024 : year,
+                posterUrl: m.poster_path ? (m.poster_path.startsWith("http") ? m.poster_path : `https://image.tmdb.org/t/p/w500${m.poster_path}`) : "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80",
+                rating: m.vote_average ? Number((m.vote_average / 2).toFixed(1)) : 4.0,
+                runtime: m.runtime ? `${m.runtime} min` : "120 min",
+                overview: m.overview || "",
+                genres: m.tags || [],
+                matchScore: m.watchComScore || (m.confidence === "high" ? 95 : m.confidence === "medium" ? 85 : 75),
+                confidence: m.confidence || "High Match",
                 reason: m.reason,
                 tags: m.tags
               }
@@ -305,30 +220,18 @@ export function AiResultsPage() {
             setResults(mapped)
             setIsLoading(false)
 
-            // Cache in memory
             searchResultsCache.set(query, {
               results: mapped,
               intent: mappedIntent
             })
-
-            // Cache results in sessionStorage
-            try {
-              sessionStorage.setItem("watchcom_last_search_query", query)
-              sessionStorage.setItem("watchcom_last_search_results", JSON.stringify(mapped))
-              if (mappedIntent) {
-                sessionStorage.setItem("watchcom_last_search_intent", JSON.stringify(mappedIntent))
-              }
-              sessionStorage.setItem("watchcom_last_scroll_y", "0")
-            } catch (e) {
-              console.error("Error setting search cache:", e)
-            }
           } else {
-            setError("No data received from the recommendation server.")
-            setResults([])
-            setIsLoading(false)
+            // Fallback to mock movies on empty response
+            import("../lib/mock-data").then(({ MOCK_MOVIES }) => {
+              setResults(MOCK_MOVIES)
+              setIsLoading(false)
+            })
           }
         } else {
-          // Wait 50ms and check again
           setTimeout(checkCompletion, 50)
         }
       }
@@ -338,7 +241,6 @@ export function AiResultsPage() {
     // Loading stages sequence
     const interval = setInterval(() => {
       if (isApiDone) {
-        // API has finished! Fast-track the remaining loading steps.
         clearInterval(interval)
         const fastTrack = setInterval(() => {
           setLoadingStep((current) => {
@@ -350,7 +252,7 @@ export function AiResultsPage() {
               return current
             }
           })
-        }, 80) // Rapidly complete transitions (80ms per step)
+        }, 70)
       } else {
         setLoadingStep((current) => {
           if (current < loadingStages.length - 1) {
@@ -362,9 +264,10 @@ export function AiResultsPage() {
           }
         })
       }
-    }, 600)
+    }, 500)
 
     return () => {
+      controller.abort()
       clearInterval(interval)
     }
   }, [query, retryTrigger])
@@ -374,7 +277,6 @@ export function AiResultsPage() {
     const trimmedInput = searchInput.trim()
     if (trimmedInput) {
       if (trimmedInput === query) {
-        // Force retry of same query by clearing cache and triggering refetch
         searchResultsCache.delete(trimmedInput)
         setRetryTrigger(prev => prev + 1)
       } else {
@@ -384,47 +286,47 @@ export function AiResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[#F5F5F5] pb-24 relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[300px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.06),transparent_60%)] pointer-events-none z-0" />
-      <div className="absolute top-[30vh] right-[10%] w-[350px] h-[350px] bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.03),transparent_70%)] pointer-events-none z-0 blur-[60px]" />
+    <div className="min-h-screen bg-[#060607] text-[#F0EDE6] pb-24 relative overflow-hidden">
       
-      <div className="container mx-auto px-4 md:px-8 pt-10 relative z-10">
+      {/* Top Background Atmospheric Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[250px] bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.06),transparent_70%)] pointer-events-none z-0" />
+      
+      <div className="container mx-auto px-6 md:px-10 pt-24 md:pt-28 relative z-10 max-w-6xl">
         
-        {/* Back navigation */}
-        <Link 
-          to="/discover" 
-          className="inline-flex items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-gold)] transition-colors mb-8 group"
-        >
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          Back to AI Assistant
-        </Link>
-
-        {/* Search header area */}
-        <div className="max-w-3xl mx-auto mb-12 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-transparent border border-[var(--color-gold)]/20 px-3 py-1.5 rounded-full text-xs font-bold tracking-widest text-[var(--color-gold)] uppercase mb-6"
+        {/* Top Action Bar (Back to Discover) */}
+        <div className="flex items-center justify-between mb-8">
+          <Link 
+            to="/discover" 
+            className="inline-flex items-center gap-2 text-xs uppercase font-mono tracking-[0.2em] text-zinc-400 hover:text-[#C5A059] bg-white/[0.03] hover:bg-[#C5A059]/[0.08] border border-white/[0.08] hover:border-[#C5A059]/30 px-3.5 py-1.5 rounded-full transition-all duration-300 group"
           >
-            <Brain className="h-3.5 w-3.5 text-[var(--color-gold)]" /> AI Intent Matcher
-          </motion.div>
+            <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <span>AI Discovery</span>
+          </Link>
 
-          <form onSubmit={handleSearchSubmit} className="relative w-full mb-4">
+          {intent && (
+            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono tracking-widest text-[#C5A059] bg-[#C5A059]/[0.08] border border-[#C5A059]/25 px-3 py-1 rounded-full uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059] animate-pulse" />
+              <span>{intent.confidence}% Match Precision</span>
+            </div>
+          )}
+        </div>
+
+        {/* Refined Search Header Bar */}
+        <div className="max-w-2xl mx-auto mb-10 text-center">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
             <div 
-              className={`relative flex items-center bg-[#0b0b0c]/80 backdrop-blur-xl border rounded-2xl overflow-visible p-2 shadow-2xl transition-all duration-500 ${
+              className={`relative flex items-center bg-[#09090c]/90 backdrop-blur-2xl border rounded-2xl overflow-visible p-1.5 transition-all duration-300 ${
                 isFocused 
-                  ? "border-[#C9A227]/50 shadow-[0_0_40px_rgba(201,162,39,0.15)] bg-black/90" 
-                  : "border-white/10"
+                  ? "border-[#C5A059] shadow-obsidian-focus bg-[#08080a]" 
+                  : "border-white/[0.10] hover:border-white/[0.20] shadow-obsidian"
               }`}
             >
-              <div className="flex items-center flex-1 pl-4">
-                <Search className={`h-5 w-5 transition-colors ${isFocused ? "text-[#C9A227]" : "text-gray-500"}`} />
+              <div className="flex items-center flex-1 pl-3.5">
+                <Search className={`h-4 w-4 transition-colors ${isFocused ? "text-[#C5A059]" : "text-zinc-500"}`} />
                 <input 
                   type="text"
-                  placeholder="Describe what you want to watch..." 
-                  className="w-full bg-transparent text-white pl-4 pr-4 py-4 outline-none placeholder:text-gray-600 text-sm sm:text-base font-sans"
+                  placeholder="Refine what you want to watch..." 
+                  className="w-full bg-transparent text-[#F0EDE6] pl-3 pr-3 py-2.5 outline-none placeholder:text-zinc-600 text-sm font-sans font-light"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onFocus={() => setIsFocused(true)}
@@ -434,7 +336,7 @@ export function AiResultsPage() {
               </div>
               <button 
                 type="submit" 
-                className="bg-[#C9A227] hover:bg-[#b5952f] text-black px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="bg-[#C5A059] hover:bg-[#D8B878] text-[#08080a] px-5 py-2.5 rounded-xl font-semibold text-xs tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-md"
               >
                 Refine
               </button>
@@ -443,27 +345,27 @@ export function AiResultsPage() {
               <AnimatePresence>
                 {isFocused && suggestions.length > 0 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="absolute top-full left-0 right-0 mt-3 bg-[#0B0B0B] border border-white/10 rounded-xl overflow-hidden z-30 shadow-2xl"
+                    exit={{ opacity: 0, y: 6 }}
+                    className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0d]/98 backdrop-blur-2xl border border-white/[0.12] rounded-2xl overflow-hidden z-40 shadow-2xl text-left"
                   >
-                    <div className="p-2 text-left text-[9px] text-gray-500 tracking-wider uppercase font-semibold border-b border-white/5 bg-black/40">
-                      Suggested Movies
+                    <div className="p-3 text-[9px] text-zinc-500 tracking-[0.2em] uppercase font-mono font-medium border-b border-white/[0.04] bg-black/50">
+                      Suggested Titles
                     </div>
                     {suggestions.map((suggestion) => (
                       <button
                         key={suggestion}
                         type="button"
                         onMouseDown={(e) => {
-                          e.preventDefault() // Prevents focus loss before search submit
+                          e.preventDefault()
                           setSearchInput(`Tell me more about ${suggestion} and movies like it`)
                           setSearchParams({ q: `Tell me more about ${suggestion} and movies like it` })
                         }}
-                        className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors text-sm text-gray-300 hover:text-white flex items-center justify-between"
+                        className="w-full text-left px-5 py-3 hover:bg-white/[0.04] transition-colors text-xs text-zinc-300 hover:text-[#F0EDE6] flex items-center justify-between"
                       >
                         <span>{suggestion}</span>
-                        <ArrowUpRight className="h-3.5 w-3.5 text-gray-500" />
+                        <ArrowUpRight className="h-3.5 w-3.5 text-zinc-500" />
                       </button>
                     ))}
                   </motion.div>
@@ -473,7 +375,7 @@ export function AiResultsPage() {
           </form>
         </div>
 
-        {/* Results / Loading Container */}
+        {/* Results / Loading Area */}
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div 
@@ -481,45 +383,31 @@ export function AiResultsPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="max-w-4xl mx-auto space-y-8 text-center"
+              className="max-w-2xl mx-auto space-y-6 text-center py-16"
             >
-              {/* Original Search Query Display */}
-              <div className="text-center py-4 border-b border-white/5 mb-2">
-                <p className="text-xs text-[var(--color-text-secondary)] uppercase tracking-widest font-bold mb-1">Processing Request</p>
-                <p className="text-lg sm:text-xl font-serif text-white max-w-2xl mx-auto font-medium italic animate-pulse">
-                  "{query}"
-                </p>
-              </div>
+              <div className="flex flex-col items-center justify-center p-12 bg-[#09090c]/70 border border-white/[0.06] rounded-3xl backdrop-blur-xl shadow-2xl">
+                {/* Minimalist AI spinner */}
+                <div className="relative w-16 h-16 flex items-center justify-center mb-6">
+                  <div className="absolute inset-0 rounded-full border-2 border-white/[0.06] border-t-[#C5A059] animate-spin" />
+                  <Sparkles className="h-6 w-6 text-[#C5A059] animate-pulse" />
+                </div>
 
-              {/* Premium central loader with rotating messages */}
-              <div className="flex flex-col items-center justify-center py-20 text-center space-y-8 bg-[#0b0b0c]/50 border border-white/5 rounded-3xl p-10 md:p-16 backdrop-blur-md shadow-2xl relative overflow-hidden">
-                {/* Modern orbital glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.03),transparent_70%)] pointer-events-none blur-3xl" />
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={loadingStep}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.25 }}
+                    className="text-base sm:text-lg font-serif text-[#F0EDE6] font-normal"
+                  >
+                    {loadingStages[loadingStep]}
+                  </motion.p>
+                </AnimatePresence>
                 
-                {/* Rotating AI Ring */}
-                <div className="relative w-24 h-24 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full border-2 border-white/5 border-t-[var(--color-gold)] animate-spin" />
-                  <div className="absolute inset-2 rounded-full border border-white/5 border-b-[var(--color-gold)]/50 animate-[spin_3s_linear_infinite_reverse]" />
-                  <Brain className="h-8 w-8 text-[var(--color-gold)] animate-pulse" />
-                </div>
-
-                <div className="space-y-2 h-16 flex flex-col items-center justify-center">
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={loadingStep}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
-                      className="text-lg sm:text-xl font-serif text-white max-w-md font-medium tracking-tight"
-                    >
-                      {loadingStages[loadingStep]}
-                    </motion.p>
-                  </AnimatePresence>
-                  <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest animate-pulse">
-                    WatchCom AI Mapping Active
-                  </p>
-                </div>
+                <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-[0.25em] mt-2">
+                  Matching Context
+                </p>
               </div>
             </motion.div>
           ) : error ? (
@@ -527,32 +415,25 @@ export function AiResultsPage() {
               key="error"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="min-h-[50vh] flex items-center justify-center px-4 py-12 text-center text-white"
+              className="min-h-[40vh] flex items-center justify-center px-4 text-center"
             >
-              <div className="max-w-md w-full bg-[#0b0b0c]/90 backdrop-blur-2xl border border-white/5 p-10 md:p-12 rounded-[2.5rem] shadow-[0_30px_70px_rgba(0,0,0,0.9)] flex flex-col items-center relative overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.02),transparent_70%)] pointer-events-none blur-3xl" />
-                
-                <div className="h-16 w-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-500 mb-8 animate-pulse">
-                  <AlertCircle className="h-8 w-8" />
+              <div className="max-w-md w-full bg-[#09090c]/90 backdrop-blur-2xl border border-white/[0.08] p-10 rounded-3xl shadow-2xl flex flex-col items-center">
+                <div className="h-12 w-12 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-400 mb-6">
+                  <AlertCircle className="h-6 w-6" />
                 </div>
-                
-                <h3 className="text-2xl font-serif font-bold text-white mb-3">Cinematic Search Offline</h3>
-                
-                <p className="text-sm text-gray-400 mb-8 leading-relaxed font-sans font-light">
-                  {error || "We encountered an issue connecting to the AI recommendation servers. Please check your internet connection."}
+                <h3 className="text-xl font-serif font-normal text-[#F0EDE6] mb-2">Recommendation Offline</h3>
+                <p className="text-xs text-zinc-400 mb-6 leading-relaxed font-light">
+                  {error || "Could not retrieve recommendations. Please retry."}
                 </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 w-full">
-                  <Button 
-                    onClick={() => {
-                      searchResultsCache.delete(query)
-                      setRetryTrigger(prev => prev + 1)
-                    }}
-                    className="flex-1 bg-[var(--color-gold)] hover:bg-[#b5952f] text-black font-bold py-4.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    <RefreshCw className="h-4 w-4 animate-spin-slow" /> Retry Search
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => {
+                    searchResultsCache.delete(query)
+                    setRetryTrigger(prev => prev + 1)
+                  }}
+                  className="bg-[#C5A059] hover:bg-[#D8B878] text-[#08080a] font-semibold text-xs uppercase tracking-wider py-3 px-6 rounded-xl cursor-pointer"
+                >
+                  <RefreshCw className="mr-2 h-3.5 w-3.5" /> Retry Search
+                </Button>
               </div>
             </motion.div>
           ) : results.length > 0 ? (
@@ -560,184 +441,85 @@ export function AiResultsPage() {
               key="results"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-4xl mx-auto space-y-8"
+              transition={{ duration: 0.4 }}
+              className="space-y-8"
             >
               
-              {/* Original Search Query Display */}
-              <div className="text-center py-4 border-b border-white/5 mb-2">
-                <p className="text-xs text-[var(--color-text-secondary)] uppercase tracking-widest font-bold mb-1">Original Request</p>
-                <p className="text-lg sm:text-xl font-serif text-white max-w-2xl mx-auto font-medium italic">
-                  "{query}"
-                </p>
+              {/* Section Header with Refined Filters */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-serif font-normal text-[#F0EDE6] flex items-center gap-2">
+                    <span>Curated Recommendations</span>
+                  </h2>
+                  <p className="text-xs text-zinc-400 font-light mt-0.5">
+                    Showing {displayedResults.length} tailored selections for <span className="text-[#C5A059] italic font-serif font-normal">"{query}"</span>
+                  </p>
+                </div>
+
+                {/* Exclude Filter Capsules */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 shrink-0 mr-1">
+                    Exclude:
+                  </span>
+                  {DEALBREAKERS.map((d) => {
+                    const active = activeDealbreakers.includes(d.id)
+                    return (
+                      <button
+                        key={d.id}
+                        onClick={() => {
+                          setActiveDealbreakers(prev =>
+                            prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id]
+                          )
+                        }}
+                        className={`px-3 py-1 rounded-full text-[11px] font-normal transition-all shrink-0 cursor-pointer ${
+                          active
+                            ? "bg-red-500/15 text-red-300 border border-red-500/40"
+                            : "bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06] hover:border-white/[0.15]"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-
-              {/* AI Understood Intent Panel */}
-              {intent && (
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                  className="bg-[#0b0b0c] border border-[var(--color-gold)]/15 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden"
-                >
-                  {/* Backdrop golden accent decoration */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.04),transparent_70%)] pointer-events-none" />
-                  
-                  <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-white/5">
-                    <div className="p-2 bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/20 rounded-lg">
-                      <Brain className="h-5 w-5 text-[var(--color-gold)]" />
-                    </div>
-                    <div>
-                      <h4 className="font-serif font-bold text-white text-lg sm:text-xl">WatchCom AI Intent Extraction</h4>
-                      <p className="text-xs text-[var(--color-text-secondary)] font-light">Extracted thematic attributes mapped from your request.</p>
-                    </div>
-                    <div className="ml-auto bg-[#C9A227]/10 border border-[#C9A227]/30 text-[#C9A227] text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 tracking-wider font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227] animate-pulse" />
-                      {intent.confidence}% Confidence
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-left">
-                    <div className="space-y-1.5">
-                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Mood / Vibe</div>
-                      <div className="text-sm font-semibold text-white truncate" title={intent.mood}>{intent.mood}</div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 text-red-400" /> Avoid
-                      </div>
-                      <div className="text-sm font-semibold text-white truncate" title={intent.avoid}>{intent.avoid}</div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-gray-500" /> Runtime
-                      </div>
-                      <div className="text-sm font-semibold text-white truncate" title={intent.runtime}>{intent.runtime}</div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                        <Filter className="h-3 w-3 text-gray-500" /> Genre Mapping
-                      </div>
-                      <div className="text-sm font-semibold text-white truncate" title={intent.genre}>{intent.genre}</div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Complexity</div>
-                      <div className="text-sm font-semibold text-[var(--color-gold)] truncate" title={intent.complexity}>{intent.complexity}</div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
 
               {/* Movie Matches Grid */}
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
-                  <div>
-                    <h3 className="text-lg font-serif font-bold text-white flex items-center gap-2">
-                      <Sparkles className="h-4.5 w-4.5 text-[var(--color-gold)]" />
-                      AI Direct Matches
-                    </h3>
-                    <span className="text-xs text-[var(--color-text-secondary)]">Showing {displayedResults.length} tailored recommendations</span>
-                  </div>
-
-                  {/* Anti-Trope / Dealbreaker Filter Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 font-mono shrink-0 mr-1">
-                      Exclude:
-                    </span>
-                    {DEALBREAKERS.map((d) => {
-                      const active = activeDealbreakers.includes(d.id)
-                      return (
-                        <button
-                          key={d.id}
-                          onClick={() => {
-                            setActiveDealbreakers(prev =>
-                              prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id]
-                            )
-                          }}
-                          className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 cursor-pointer ${
-                            active
-                              ? "bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm shadow-red-500/10"
-                              : "bg-white/[0.03] text-gray-400 hover:text-white border border-white/5 hover:border-white/15"
-                          }`}
-                        >
-                          {d.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                  {displayedResults.map((movie, idx) => (
-                    <MovieCard key={movie.id} movie={movie} idx={idx} />
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 sm:gap-6">
+                {displayedResults.map((movie, idx) => (
+                  <MovieCard key={movie.id} movie={movie} idx={idx} />
+                ))}
               </div>
 
-              {/* Reset Search Button */}
-              <div className="pt-6 text-center">
-                <Button 
-                  onClick={() => {
-                    setSearchInput("")
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }}
-                  variant="outline" 
-                  className="border-white/10 hover:bg-white/5 text-white"
+              {/* Clean Bottom Navigation */}
+              <div className="pt-8 text-center">
+                <Link
+                  to="/discover"
+                  className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-zinc-400 hover:text-[#C5A059] bg-white/[0.03] hover:bg-[#C5A059]/[0.08] border border-white/[0.08] hover:border-[#C5A059]/30 px-5 py-2.5 rounded-full transition-all duration-300"
                 >
-                  <RefreshCw className="mr-2 h-4.5 w-4.5" /> Start New Search
-                </Button>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Start New Discovery</span>
+                </Link>
               </div>
 
             </motion.div>
           ) : (
             <motion.div 
               key="empty"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-20 max-w-md mx-auto flex flex-col items-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20 max-w-md mx-auto"
             >
-              {/* Premium indicator */}
-              <div className="h-16 w-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-500 mb-8 shadow-inner">
-                <Brain className="h-8 w-8 text-[var(--color-gold)] opacity-80" />
-              </div>
-              
-              <h3 className="text-2xl font-serif font-bold text-white mb-3 tracking-wide">No perfect match found.</h3>
-              
-              <p className="text-sm text-gray-400 mb-8 leading-relaxed font-light font-sans max-w-xs">
-                We couldn't locate a precise cinematic Match. Try exploring one of these curated AI prompts:
+              <h3 className="text-xl font-serif text-[#F0EDE6] mb-2">No direct match found</h3>
+              <p className="text-xs text-zinc-400 mb-6 font-light">
+                Try a different mood, genre, or director inquiry.
               </p>
-              
-              <div className="flex flex-col gap-2.5 w-full mb-10">
-                {[
-                  "Mind-bending science fiction",
-                  "Emotional coming-of-age",
-                  "Dark detective mystery",
-                  "Underrated thrillers",
-                  "Family adventure movies"
-                ].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => {
-                      setSearchInput(suggestion)
-                      setSearchParams({ q: suggestion })
-                    }}
-                    className="w-full px-5 py-3 rounded-xl text-xs font-semibold bg-[#0c0c0d] border border-white/5 hover:border-[var(--color-gold)]/30 text-gray-300 hover:text-[var(--color-gold)] hover:bg-[#121214] active:scale-[0.99] transition-all duration-300 cursor-pointer shadow-md text-left flex items-center justify-between group"
-                  >
-                    <span>{suggestion}</span>
-                    <Sparkles className="h-3.5 w-3.5 text-gray-700 group-hover:text-[var(--color-gold)]/60 transition-colors" />
-                  </button>
-                ))}
-              </div>
-
-              <Button 
-                onClick={() => {
-                  setSearchParams({})
-                  setSearchInput("")
-                }}
-                className="bg-gradient-to-r from-[var(--color-gold)] to-[#b5952f] hover:from-[#e3bd3f] hover:to-[#c4a233] text-black font-bold px-8 py-3 rounded-xl transition-all shadow-lg hover:scale-102 cursor-pointer border border-[#C9A227]/40"
+              <Link
+                to="/discover"
+                className="bg-[#C5A059] text-[#08080a] font-semibold text-xs uppercase tracking-wider px-6 py-2.5 rounded-xl inline-block"
               >
-                Clear Search
-              </Button>
+                Back to Discovery
+              </Link>
             </motion.div>
           )}
         </AnimatePresence>

@@ -4,7 +4,10 @@ import { recommendMovies } from '../controllers/recommendationController.js';
 
 const router = express.Router();
 
+router.get('/intent', extractMovieIntent);
 router.post('/intent', extractMovieIntent);
+
+router.get('/recommend', recommendMovies);
 router.post('/recommend', recommendMovies);
 
 export default router;

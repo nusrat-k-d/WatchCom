@@ -6,7 +6,8 @@ import { enrichRecommendations } from "../services/ai/explanationLayer.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const recommendMovies = asyncHandler(async (req, res) => {
-    const { query, refinements } = req.body;
+    const query = req.body?.query || req.query?.q || req.query?.query || "";
+    const refinements = req.body?.refinements || [];
 
     // 1. Extract base intent
     const baseIntent = await extractIntent(query);

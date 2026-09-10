@@ -1,23 +1,36 @@
 import { Link } from "react-router-dom"
-import { Compass, Ghost } from "lucide-react"
+import { Compass, Film } from "lucide-react"
 import { Button } from "../components/ui/button"
 
 export function NotFoundPage() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center px-4">
-      <div className="h-32 w-32 rounded-full bg-white/5 flex items-center justify-center mb-8 border border-white/10 shadow-[0_0_50px_rgba(255,255,255,0.05)]">
-        <Ghost className="h-12 w-12 text-[var(--color-gold)]" />
+    <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-28 md:pt-36 pb-20 relative z-10">
+      {/* Soft Gold Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.04),transparent_70%)] pointer-events-none blur-[60px]" />
+      
+      <div className="max-w-md w-full bg-[#09090c]/80 backdrop-blur-2xl border border-white/[0.08] p-10 md:p-12 rounded-3xl shadow-[0_30px_70px_rgba(0,0,0,0.9)] flex flex-col items-center">
+        <div className="h-16 w-16 rounded-2xl bg-[#C5A059]/10 border border-[#C5A059]/20 flex items-center justify-center mb-6 text-[#C5A059]">
+          <Film className="h-8 w-8" />
+        </div>
+        
+        <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-[#C5A059] mb-2 font-medium">
+          ✦ 404 UNCALIBRATED COORDINATES
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl font-serif font-normal text-[#F0EDE6] mb-3 tracking-tight">
+          Signal Disconnected
+        </h1>
+
+        <p className="text-xs sm:text-sm text-zinc-400 mb-8 max-w-sm font-light leading-relaxed">
+          The cinematic sequence you are seeking does not exist in our catalog. Let's redirect your telemetry to calibrated space.
+        </p>
+
+        <Link to="/discover" className="w-full focus-visible:outline-none">
+          <Button className="w-full bg-[#C5A059] hover:bg-[#D8B878] text-[#08080a] font-semibold py-3.5 rounded-xl transition-all duration-300 shadow-[0_2px_15px_rgba(197,160,89,0.3)] cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+            <Compass className="h-4 w-4" /> Return to Discover
+          </Button>
+        </Link>
       </div>
-      <h1 className="text-6xl font-serif font-bold mb-4 tracking-tight">404</h1>
-      <h2 className="text-2xl font-bold mb-4">Signal Lost</h2>
-      <p className="text-[var(--color-text-secondary)] mb-8 max-w-md text-lg">
-        The cinematic coordinates you entered don't exist in our database. Let's get you back to calibrated space.
-      </p>
-      <Link to="/discover" className="focus-visible:outline-none">
-        <Button size="lg" className="bg-gradient-to-r from-[var(--color-gold)] to-[#b5952f] hover:from-[#e3bd3f] hover:to-[#c4a233] text-black font-bold px-8 py-4 rounded-xl transition-all shadow-lg hover:scale-[1.02] cursor-pointer border border-[#C9A227]/40">
-          <Compass className="mr-2 h-5 w-5" /> Return to Discover
-        </Button>
-      </Link>
     </div>
   )
 }
